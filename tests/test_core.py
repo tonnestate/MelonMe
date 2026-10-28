@@ -187,5 +187,22 @@ class AwinClientTests(unittest.TestCase):
                                                      "2026-02-15T00:00:00")
 
 
+    def test_badly_formatted_money_is_not_silently_zeroed(self):
+        r = core.learn({"transactions": [{"id": "bad-1", "status": "approved",
+                                           "currency": "EUR", "commission": "not-a-number"}]})
+        self.assertEqual(r["transactions_counted"], 0)
+        self.assertEqual(r["errors"][0]["code"], "INVALID_AMOUNT")
+
+    def test_payout_receipt_is_only_counted_once(self):
+        payout = {"payment_id": "bank-42", "currency": "EUR", "amount": "8.50"}
+        r = core.learn({"payouts": [payout, payout]})
+        self.assertEqual(r["currencies"]["EUR"]["paid"], "8.50")
+
+    def test_invalid_limit_uses_default_without_aborting(self):
+        r = core.find({"questions": [Q], "offers": [O], "limit": "broken"})
+        self.assertEqual(r["opportunities"][0]["decision"], "READY")
+        self.assertEqual(r["errors"][0]["code"], "INVALID_LIMIT_USED_DEFAULT")
+
+
 if __name__ == "__main__":
     unittest.main()
