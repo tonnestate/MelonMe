@@ -337,7 +337,9 @@ def learn(results: dict, awin: Awin | None = None) -> dict:
         if isinstance(commission, dict):
             currency = str(commission.get("currency") or currency).upper()
             commission = commission.get("amount", 0)
-        status = str(item.get("status") or "").lower()
+        # Awin's actual transaction JSON uses commissionStatus, not status.
+        # Support generic host records too; do not infer payout from approval.
+        status = str(item.get("commissionStatus") or item.get("status") or "").lower()
         if status not in ("pending", "approved", "declined", "deleted"):
             errors.append({"transaction": tid, "code": "STATUS_UNKNOWN"})
             continue
