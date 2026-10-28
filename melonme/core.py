@@ -171,7 +171,7 @@ _STOP = set(("best which what does should with from have that this please lookin
 
 
 def _words(text: str) -> set[str]:
-    return {w for w in re.findall(r"[^\W_]+", text.casefold()) if len(w) > 3 and w not in _STOP}
+    return {w for w in re.findall(r"[^\W_]+", text.casefold()) if len(w) >= 2 and w not in _STOP}
 
 
 def _market(value: Any) -> str:
@@ -188,15 +188,21 @@ def _offer_match(question: dict, offer: dict, market: str) -> float:
     title = str(offer.get("title") or "")
     if not title or not _https_url(str(offer.get("url") or "")):
         return 0.0
-    terms = _words(str(question.get("query") or question.get("text") or ""))
-    keywords = _words(str(offer.get("keywords") or title))
+    extra = question.get("search_terms") or []
+    translated = " ".join(str(t) for t in extra[:30]) if isinstance(extra, list) else ""
+    terms = _words(str(question.get("query") or question.get("text") or "") + " " + translated)
+    keywords = _words(str(offer.get("keywords") or title) + " " +
+                      str(offer.get("brand") or "") + " " +
+                      str(offer.get("product_id") or "") + " " +
+                      str(offer.get("description") or "")[:300])
     common = len(terms & keywords)
     if common == 0:
         return 0.0
     return round(common / max(len(terms), 1), 4)
 
 
-def find(context: dict, awin: Awin | None = None) -> dict:
+def find(context: dict, awin: Awin | None = None,
+         inventory_lookup: Any | None = None) -> dict:
     """Rank host-supplied real questions and real offers without inventing inventory.
 
     This function is deliberately host-driven: FruitStack discovers questions and
@@ -213,6 +219,29 @@ def find(context: dict, awin: Awin | None = None) -> dict:
     except (TypeError, ValueError):
         limit = 20
         errors.append({"code": "INVALID_LIMIT_USED_DEFAULT"})
+    # Bridge only to an already-existing FruitStack product/inventory capability.
+    # The host can batch queries; MelonMe does not build a second crawler.
+    if inventory_lookup is not None and context.get("use_inventory_bridge", True):
+        payload = {
+            "questions": [{
+                "id": q.get("id") or q.get("source_url"),
+                "text": q.get("query") or q.get("text"),
+                "market": _market(q.get("market") or context.get("market")),
+                "language": q.get("language") or context.get("language"),
+                "search_terms": q.get("search_terms") or [],
+            } for q in questions[:100] if isinstance(q, dict)],
+            "limit_per_question": 10,
+        }
+        try:
+            received = inventory_lookup(payload)
+            new_offers = received.get("offers") if isinstance(received, dict) else None
+            if not isinstance(new_offers, list):
+                raise PartnerError("INVENTORY_RESPONSE_INVALID")
+            offers = [*offers, *new_offers[:1000]]
+        except Exception as err:
+            errors.append({"provider": "fruitstack_inventory",
+                           "code": (str(err) if isinstance(err, PartnerError)
+                                    else type(err).__name__)})
     # Awin's actual enhanced feed is a product source, not a catalogue of
     # programmes. Each optional feed is downloaded once, for all questions in
     # its market; no silent assumption that the full market was searched.
