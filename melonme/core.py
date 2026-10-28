@@ -215,6 +215,7 @@ def find(context: dict, awin: Awin | None = None) -> dict:
                     "market": market,
                     "price": offer.get("price"), "currency": offer.get("currency"),
                     "affiliate_url": offer.get("affiliate_url"),
+                    "affiliate_verified": offer.get("affiliate_verified") is True,
                     "advertiser_id": offer.get("advertiser_id"),
                     "verified_facts": offer.get("verified_facts") or [],
                     "product_id": offer.get("product_id"),
@@ -248,8 +249,24 @@ def find(context: dict, awin: Awin | None = None) -> dict:
             "inventory_checks": inventory_checks, "checked": len(questions[:500])}
 
 
-def _draft(opportunity: dict, offer: dict, link: str) -> str:
-    prefix = "Werbehinweis: Affiliate-Link.\n" if link != offer.get("url") else ""
+_AD_LABELS = {
+    "de": "Werbung: Affiliate-Link.",
+    "en": "Disclosure: affiliate link.",
+    "fr": "Publicité : lien affilié.",
+    "es": "Publicidad: enlace de afiliado.",
+    "it": "Pubblicità: link di affiliazione.",
+    "nl": "Advertentie: affiliatelink.",
+    "pt": "Publicidade: link de afiliado.",
+    "th": "โฆษณา: ลิงก์พันธมิตร",
+}
+
+
+def _disclosure(language: object) -> str:
+    return _AD_LABELS.get(str(language or "en").lower().split("-")[0], _AD_LABELS["en"])
+
+
+def _draft(opportunity: dict, offer: dict, link: str, tracked: bool) -> str:
+    prefix = _disclosure(opportunity.get("language")) + "\n" if tracked else ""
     price = ""
     if offer.get("price") is not None and offer.get("currency"):
         price = " — " + str(offer["price"]) + " " + str(offer["currency"])
@@ -258,64 +275,108 @@ def _draft(opportunity: dict, offer: dict, link: str) -> str:
     return prefix + str(offer["title"]) + price + detail + "\n" + link
 
 
+def _resolve_offer(offer: dict, oid: str, market: str, awin: Awin | None) -> tuple[str, bool, list[str]]:
+    """Try actual external link generation; errors affect this offer only."""
+    warnings: list[str] = []
+    link = str(offer["url"])
+    tracked = False
+    if str(offer.get("provider") or "").lower() == "awin" and offer.get("advertiser_id") is not None:
+        client = awin if awin is not None else Awin.from_env()
+        if client is None:
+            warnings.append("AWIN_NOT_CONFIGURED")
+        else:
+            # Direct real link attempt: absence from an unrelated programme list
+            # must not create another AVCOS-style false global restriction.
+            try:
+                clickref = hashlib.sha256((oid + "|" + link).encode("utf-8")).hexdigest()[:24]
+                link = client.link(int(offer["advertiser_id"]), link, clickref)
+                tracked = True
+            except (PartnerError, ValueError, TypeError) as exc:
+                warnings.append("AWIN_" + str(exc))
+    elif offer.get("affiliate_url"):
+        existing = offer["affiliate_url"]
+        if isinstance(existing, str) and _https_url(existing) and offer.get("affiliate_verified") is True:
+            link, tracked = existing, True
+        else:
+            warnings.append("AFFILIATE_LINK_UNVERIFIED")
+    return link, tracked, warnings
+
+
 def execute(opportunity: dict, awin: Awin | None = None,
             publisher: Any | None = None) -> dict:
-    """Build a truthful draft. Live publishing requires a host-owned publisher adapter.
+    """Generate an answer from actual offers, try local link alternatives.
 
-    Publisher adapter callable(payload) must return {"external_id": ..., "url": ...}.
+    The publication target and channel are supplied by the host. A
+    PUBLISHED claim requires an external receipt; no global stop.
     """
     oid = str(opportunity.get("id") or "")
     offers = opportunity.get("offers") or []
     if not isinstance(offers, list) or not offers:
         return {"status": "NO_ACTION", "id": oid, "reason": "NO_MATCH"}
-    offer = offers[0]  # Relevance was computed without commission preference.
-    if not isinstance(offer, dict) or not _https_url(str(offer.get("url") or "")):
-        return {"status": "NO_ACTION", "id": oid, "reason": "INVALID_OFFER"}
     market = _market(opportunity.get("market"))
-    if market != _market(offer.get("market")):
-        return {"status": "NO_ACTION", "id": oid, "reason": "MARKET_MISMATCH"}
+    if not market:
+        return {"status": "NO_ACTION", "id": oid, "reason": "MARKET_UNKNOWN"}
+    eligible = [
+        offer for offer in offers[:10]
+        if isinstance(offer, dict)
+        and _market(offer.get("market")) == market
+        and offer.get("available") is not False
+        and offer.get("title")
+        and _https_url(str(offer.get("url") or ""))
+    ]
+    if not eligible:
+        reason = "MARKET_MISMATCH" if any(
+            isinstance(o, dict) and _market(o.get("market")) != market for o in offers
+        ) else "INVALID_OFFER"
+        return {"status": "NO_ACTION", "id": oid, "reason": reason}
+    # Preserve independent product relevance before any affiliate optimisation.
+    eligible.sort(key=lambda x: -float(x.get("relevance") or 0))
+    peak = float(eligible[0].get("relevance") or 0)
+    resolved: list[dict] = []
     warnings: list[str] = []
-    link = str(offer["url"])
-    tracked = False
-    existing = offer.get("affiliate_url")
-    if isinstance(existing, str) and _https_url(existing):
-        link, tracked = existing, True
-    elif offer.get("provider", "").lower() == "awin" and offer.get("advertiser_id"):
-        client = awin if awin is not None else Awin.from_env()
-        if client:
-            try:
-                joined = client.programmes(market)
-                match = next((p for p in joined
-                              if str(p.get("id")) == str(offer["advertiser_id"])
-                              and p.get("status", "active").lower() == "active"
-                              and p.get("linkStatus", "online").lower() == "online"), None)
-                if match is None:
-                    warnings.append("AWIN_PROGRAMME_NOT_ACTIVE_FOR_MARKET")
-                else:
-                    clickref = hashlib.sha256(oid.encode("utf-8")).hexdigest()[:24]
-                    link = client.link(int(offer["advertiser_id"]), link, clickref)
-                    tracked = True
-            except (PartnerError, TypeError, ValueError) as err:
-                warnings.append("AWIN_" + str(err))
-        else:
-            warnings.append("AWIN_NOT_CONFIGURED")
-    answer = str(opportunity.get("answer_text") or _draft(opportunity, offer, link))
-    if tracked and opportunity.get("answer_text") and link not in answer:
-        # The host's answer must actually contain the tracked URL.
-        warnings.append("TRACKING_LINK_NOT_IN_ANSWER")
-        tracked = False
-    fingerprint = hashlib.sha256((oid + "\n" + answer).encode("utf-8")).hexdigest()
-    base = {"id": oid, "draft": answer, "tracked": tracked,
-            "offer_url": link, "fingerprint": fingerprint, "warnings": warnings}
+    for offer in eligible[:5]:
+        link, tracked, local_warnings = _resolve_offer(offer, oid, market, awin)
+        warnings.extend(local_warnings)
+        resolved.append({"offer": offer, "link": link, "tracked": tracked})
+    # A tracked offer may win only if suitability is nearly identical.
+    selected = next(
+        (x for x in resolved if x["tracked"] and
+         float(x["offer"].get("relevance") or 0) >= 0.95 * peak),
+        resolved[0],
+    )
+    offer, link, tracked = selected["offer"], selected["link"], selected["tracked"]
+    authored = opportunity.get("answer_text")
+    if authored:
+        answer = str(authored)
+        if tracked:
+            if link not in answer:
+                answer = answer.rstrip() + "\n" + link
+            disclosure = _disclosure(opportunity.get("language"))
+            if disclosure not in answer:
+                answer = disclosure + "\n" + answer
+    else:
+        answer = _draft(opportunity, offer, link, tracked)
+    fingerprint = hashlib.sha256(
+        (oid + "\n" + str(opportunity.get("source_url") or "") + "\n" + answer).encode("utf-8")
+    ).hexdigest()
+    base = {
+        "id": oid, "draft": answer, "tracked": tracked,
+        "offer_url": link, "fingerprint": fingerprint, "warnings": warnings,
+        "alternatives_checked": len(resolved),
+        "selected_provider": str(offer.get("provider") or "host"),
+        "selected_product_id": offer.get("product_id"),
+    }
     if not opportunity.get("publish"):
         return {"status": "DRAFT_ONLY", **base}
     if publisher is None:
         return {"status": "DRAFT_ONLY", **base, "reason": "PUBLISH_ADAPTER_NOT_CONFIGURED"}
     if not opportunity.get("channel") or not opportunity.get("source_url"):
         return {"status": "DRAFT_ONLY", **base, "reason": "PUBLISH_TARGET_MISSING"}
-    payload = {"id": oid, "channel": opportunity["channel"],
-               "source_url": opportunity["source_url"],
-               "text": answer, "idempotency_key": fingerprint}
+    payload = {
+        "id": oid, "channel": opportunity["channel"],
+        "source_url": opportunity["source_url"],
+        "text": answer, "idempotency_key": fingerprint,
+    }
     try:
         receipt = publisher(payload)
         external_id = receipt.get("external_id") if isinstance(receipt, dict) else None
