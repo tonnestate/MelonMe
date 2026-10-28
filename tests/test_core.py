@@ -180,9 +180,15 @@ class AwinClientTests(unittest.TestCase):
             self.assertIn("countryCode=DE", request.call_args.args[0])
             self.assertEqual(request.call_args.args[1], "secret")
 
-    def test_link_requires_secure_destination(self):
+    def test_link_requires_web_destination(self):
         with self.assertRaises(core.PartnerError):
-            core.Awin("1234", "secret").link(7, "http://shop.example", "click")
+            core.Awin("1234", "secret").link(7, "javascript:alert(1)", "click")
+
+    def test_http_merchant_destination_allowed_by_awin(self):
+        with patch("melonme.core._json_request", return_value={"url": "https://www.awin1.com/track"}) as request:
+            link = core.Awin("1234", "secret").link(7, "http://shop.example/item", "click")
+        self.assertTrue(link.startswith("https://www.awin1.com/"))
+        self.assertEqual(request.call_args.args[2]["destinationUrl"], "http://shop.example/item")
 
     def test_transaction_window_bounded(self):
         with self.assertRaises(core.PartnerError):
@@ -332,6 +338,14 @@ class AwinFeedTests(unittest.TestCase):
                           awin=core.Awin("1234", "secret"))
         self.assertEqual(r["opportunities"][0]["decision"], "READY")
         self.assertEqual(r["errors"][0]["provider"], "awin_feed")
+
+    def test_documented_http_product_link_retained(self):
+        raw = {"id": "a1", "title": "Sport Kopfhörer", "link": "http://shop.example/item",
+               "availability": "in_stock", "price": "22.00 EUR"}
+        with patch("melonme.awin_inventory._no_redirect_open",
+                   return_value=io.BytesIO((json.dumps(raw)+"\\n").encode())):
+            r = awin_inventory.scan_enhanced_feed("1234", "secret", 7, "de_AT", "AT", "Sport Kopfhörer")
+        self.assertEqual(r["offers"][0]["url"], "http://shop.example/item")
 
     def test_invalid_locale_rejected_without_network(self):
         with self.assertRaisesRegex(ValueError, "LOCALE_MARKET_MISMATCH"):
