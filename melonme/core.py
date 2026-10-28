@@ -276,7 +276,7 @@ def find(context: dict, awin: Awin | None = None,
         active_questions.append(question)
     # Bridge only to an already-existing FruitStack product/inventory capability.
     # The host can batch queries; MelonMe does not build a second crawler.
-    if inventory_lookup is not None and context.get("use_inventory_bridge", True):
+    if inventory_lookup is not None and active_questions and context.get("use_inventory_bridge", True):
         payload = {
             "questions": [{
                 "id": q.get("id") or q.get("source_url"),
