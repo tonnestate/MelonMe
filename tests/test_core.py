@@ -288,7 +288,7 @@ class AwinFeedTests(unittest.TestCase):
         return io.BytesIO((json.dumps(product) + "\n").encode())
 
     def test_actual_enhanced_feed_product_is_found(self):
-        with patch("melonme.awin_inventory.urlopen", return_value=self._response()) as http:
+        with patch("melonme.awin_inventory._no_redirect_open", return_value=self._response()) as http:
             r = awin_inventory.scan_enhanced_feed(
                 "1234", "secret", 7, "de_AT", "AT", "Sport Kopfhörer")
         self.assertTrue(r["complete"])
@@ -298,7 +298,7 @@ class AwinFeedTests(unittest.TestCase):
         self.assertNotIn("secret", http.call_args.args[0].full_url)
 
     def test_feed_is_wired_into_find(self):
-        with patch("melonme.awin_inventory.urlopen", return_value=self._response()):
+        with patch("melonme.awin_inventory._no_redirect_open", return_value=self._response()):
             r = core.find({"questions": [Q], "offers": [],
                            "awin_feeds": [{"market": "AT", "locale": "de_AT",
                                            "advertiser_id": 7}]},
@@ -308,7 +308,7 @@ class AwinFeedTests(unittest.TestCase):
         self.assertEqual(r["inventory_checks"][0]["scanned_rows"], 1)
 
     def test_partial_feed_is_not_claimed_complete(self):
-        with patch("melonme.awin_inventory.urlopen", return_value=self._response()):
+        with patch("melonme.awin_inventory._no_redirect_open", return_value=self._response()):
             r = awin_inventory.scan_enhanced_feed(
                 "1234", "secret", 7, "de_AT", "AT", "No match",
                 max_rows=1)
@@ -318,13 +318,13 @@ class AwinFeedTests(unittest.TestCase):
         data = (json.dumps({"id": "1", "title": "Sport Kopfhörer",
                             "link": "https://shop.example/test"})
                 + "\n" + json.dumps({"error": 500, "message": "incomplete"}) + "\n")
-        with patch("melonme.awin_inventory.urlopen", return_value=io.BytesIO(data.encode())):
+        with patch("melonme.awin_inventory._no_redirect_open", return_value=io.BytesIO(data.encode())):
             with self.assertRaisesRegex(ValueError, "AWIN_FEED_ERROR_TRAILER"):
                 awin_inventory.scan_enhanced_feed(
                     "1234", "secret", 7, "de_AT", "AT", "Sport Kopfhörer")
 
     def test_feed_failure_is_local_to_source_not_all_questions(self):
-        with patch("melonme.awin_inventory.urlopen",
+        with patch("melonme.awin_inventory._no_redirect_open",
                    side_effect=TimeoutError("unreachable")):
             r = core.find({"questions": [Q], "offers": [O],
                            "awin_feeds": [{"market": "AT", "locale": "de_AT",
