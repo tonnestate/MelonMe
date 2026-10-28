@@ -412,11 +412,12 @@ def _draft(opportunity: dict, offer: dict, link: str, tracked: bool) -> str:
     return prefix + str(offer["title"]) + price + detail + "\n" + link
 
 
-def _resolve_offer(offer: dict, oid: str, market: str, awin: Awin | None) -> tuple[str, bool, list[str]]:
+def _resolve_offer(offer: dict, oid: str, market: str, awin: Awin | None) -> tuple[str, bool, str | None, list[str]]:
     """Try actual external link generation; errors affect this offer only."""
     warnings: list[str] = []
     link = str(offer["url"])
     tracked = False
+    actual_clickref = None
     if str(offer.get("provider") or "").lower() == "awin" and offer.get("advertiser_id") is not None:
         client = awin if awin is not None else Awin.from_env()
         if client is None:
@@ -428,6 +429,7 @@ def _resolve_offer(offer: dict, oid: str, market: str, awin: Awin | None) -> tup
                 clickref = hashlib.sha256((oid + "|" + link).encode("utf-8")).hexdigest()[:24]
                 link = client.link(int(offer["advertiser_id"]), link, clickref)
                 tracked = True
+                actual_clickref = clickref
             except (PartnerError, ValueError, TypeError) as exc:
                 warnings.append("AWIN_" + str(exc))
     elif offer.get("affiliate_url"):
@@ -436,7 +438,7 @@ def _resolve_offer(offer: dict, oid: str, market: str, awin: Awin | None) -> tup
             link, tracked = existing, True
         else:
             warnings.append("AFFILIATE_LINK_UNVERIFIED")
-    return link, tracked, warnings
+    return link, tracked, actual_clickref, warnings
 
 
 def execute(opportunity: dict, awin: Awin | None = None,
@@ -478,19 +480,32 @@ def execute(opportunity: dict, awin: Awin | None = None,
     resolved: list[dict] = []
     warnings: list[str] = []
     for offer in eligible[:5]:
-        link, tracked, local_warnings = _resolve_offer(offer, oid, market, awin)
+        link, tracked, clickref, local_warnings = _resolve_offer(offer, oid, market, awin)
         warnings.extend(local_warnings)
-        resolved.append({"offer": offer, "link": link, "tracked": tracked})
+        resolved.append({"offer": offer, "link": link, "tracked": tracked, "clickref": clickref})
     # A tracked offer may win only if suitability is nearly identical.
     selected = next(
         (x for x in resolved if x["tracked"] and
          relevance(x["offer"]) >= 0.95 * peak),
         resolved[0],
     )
-    offer, link, tracked = selected["offer"], selected["link"], selected["tracked"]
-    authored = opportunity.get("answer_text")
+    authored = str(opportunity.get("answer_text") or "").strip()
+    # Prevent affiliate links being added to copy referring to another product.
     if authored:
-        answer = str(authored)
+        host_product_id = str(opportunity.get("answer_offer_id") or "")
+        matches = [x for x in resolved if
+                   (host_product_id and str(x["offer"].get("product_id") or "") == host_product_id)
+                   or (len(str(x["offer"].get("title") or "")) >= 5 and
+                       str(x["offer"]["title"]).casefold() in authored.casefold())]
+        if matches:
+            matches.sort(key=lambda x: -relevance(x["offer"]))
+            selected = matches[0]
+        else:
+            warnings.append("HOST_ANSWER_OFFER_MISMATCH_REBUILT")
+            authored = ""
+    offer, link, tracked = selected["offer"], selected["link"], selected["tracked"]
+    if authored:
+        answer = authored
         if tracked:
             if link not in answer:
                 answer = answer.rstrip() + "\n" + link
@@ -502,9 +517,16 @@ def execute(opportunity: dict, awin: Awin | None = None,
     fingerprint = hashlib.sha256(
         (oid + "\n" + str(opportunity.get("source_url") or "") + "\n" + answer).encode("utf-8")
     ).hexdigest()
+    # Stable per target; editing prose must not create a new post on retries.
+    publication_key = hashlib.sha256(
+        (oid + "|" + str(opportunity.get("channel") or "") + "|" +
+         str(opportunity.get("source_url") or "")).encode("utf-8")
+    ).hexdigest()
     base = {
         "id": oid, "draft": answer, "tracked": tracked,
-        "offer_url": link, "fingerprint": fingerprint, "warnings": warnings,
+        "offer_url": link, "fingerprint": fingerprint,
+        "publication_key": publication_key, "clickref": selected["clickref"],
+        "warnings": warnings,
         "alternatives_checked": len(resolved),
         "selected_provider": str(offer.get("provider") or "host"),
         "selected_product_id": offer.get("product_id"),
@@ -518,7 +540,7 @@ def execute(opportunity: dict, awin: Awin | None = None,
     payload = {
         "id": oid, "channel": opportunity["channel"],
         "source_url": opportunity["source_url"],
-        "text": answer, "idempotency_key": fingerprint,
+        "text": answer, "idempotency_key": publication_key,
     }
     try:
         receipt = publisher(payload)
