@@ -1,312 +1,303 @@
-# MelonMe – Konzept eines selbstlernenden FruitStack-Monetarisierungsagenten
+# MelonMe — selbstlernendes Vermittlungsgeschäftsmodell im FruitStack
 
-**Status:** Konzept / keine Implementierungsbehauptung  
-**Version:** 0.1  
-**Stand:** 28. Oktober 2026  
-**Repository:** https://github.com/tonnestate/MelonMe  
-**Zielsystem:** FruitStack; konkrete Schnittstellen werden erst nach Prüfung der dortigen Repositories verbindlich festgelegt.
+**Konzept:** v0.2 · **Datum:** 28.10.2026 · **Status:** fachliches Zielbild, keine implementierte Funktion behauptet  
+**Repository:** [tonnestate/MelonMe](https://github.com/tonnestate/MelonMe) · **Anbindung:** seitlich an den bestehenden FruitStack über geprüfte Schnittstellen
 
-## 1. Executive Summary
+> **MelonMe ist genau ein Geschäftsmodell — kein neues Betriebssystem.** Das System findet vorhandene, aktuelle Kaufberatungsfragen, erstellt bei Bedarf nachprüfbar hilfreiche Produkt- und Angebotsvergleiche, vermittelt ausschließlich auf erlaubten Kanälen mit aktiv freigegebenen Partnerzugängen und lernt aus **tatsächlich nachgewiesenen wirtschaftlichen Ergebnissen**. Es kauft keine Werbung ein, ersetzt keine FruitStack-Komponente und wird nicht zur universellen Affiliate-Plattform ausgebaut.
 
-**MelonMe** soll eine international einsetzbare, über MCP steuerbare Monetarisierungsfähigkeit für den FruitStack werden. Das System erkennt in erlaubten externen Informationsquellen konkrete Kauf- und Beratungsabsichten, ermittelt fachlich passende Angebote, verfasst ehrliche und nachvollziehbare Antworten beziehungsweise Produktvergleiche und veröffentlicht sie ausschließlich auf Plattformen und in Kontexten, die diese Form kommerzieller Mitwirkung tatsächlich erlauben. MelonMe misst anschließend, welche Aktionen zu gültigen Provisionen und welchem wirtschaftlichen Ergebnis geführt haben, und verbessert seine Auswahlentscheidungen datenbasiert.
+## 1. Ziel, Geschäftsmodell und Systemgrenze
 
-**Es geht nicht darum, selbst Werbebudgets auszugeben.** MelonMe ist keine Advertising-Agentur, keine Ad-Buying-Suite und kein Werbebanner-Server für TonnEstate. MelonMe soll aus vorhandenen, zulässigen Kaufinteressen **Einnahmen erzielen**, statt Reichweite kostenpflichtig einzukaufen.
+### 1.1 Wirtschaftlicher Zweck
 
-Die Automatisierung wird nicht an der Zahl veröffentlichter Beiträge, sondern an **nachvollziehbarem Nettoertrag bei nachgewiesener Regelkonformität und hilfreichen Antworten** gemessen. Die Entscheidung, nichts zu veröffentlichen, ist eine vollwertige Systemaktion.
+Menschen fragen in unterschiedlichen Sprachen beispielsweise „Welcher Staubsauger eignet sich für Tierhaare?“, „Welche Kopfhörer sind eine sinnvolle Alternative?“ oder „Welche Lösung erfüllt meine konkreten Anforderungen?“. MelonMe erkennt aussichtsreiche, aktuelle Fragen in **zulässig nutzbaren Quellen**, ermittelt fachlich geeignete Produkte und verfasst passende, ehrliche Antworten. Wo sowohl Community- als auch Partnerbedingungen es erlauben, kann die Antwort vergütete Angebote enthalten. Die eigentliche Leistung ist die Beratung am vorhandenen Bedarf; die Provision ist eine mögliche Folge.
 
-**Zentraler Kreislauf:** Gelegenheit entdecken → Zulässigkeit prüfen → Kaufabsicht verstehen → Produkte unabhängig vergleichen → vergütungsfähige Angebote prüfen → freigegebene Antwort veröffentlichen → Wirkung und bestätigte Provisionen erfassen → wirtschaftliches Ergebnis berechnen → Strategie anpassen.
+**Fachliche Wertschöpfungskette:** `DEMAND → QUALIFY → ELIGIBILITY → RESEARCH → COMPARE → AUTHORIZED_PUBLISH → ATTRIBUTION → COMMISSION → LEARN`.
 
-## 2. Zielbild und Anwendungsfall
+MelonMe entwickelt **nicht** neue, unabhängige Geschäftsmodelle, sondern optimiert ausschließlich diese Vermittlungsform: Welche Art vorhandener Anfrage lohnt die Bearbeitung, welche fachlich geeignete Empfehlung hilft, wo ist ihre Veröffentlichung zulässig, und wie sieht das tatsächliche Ergebnis aus?
 
-Eine Person fragt beispielsweise in einem technisch orientierten Forum: „Welcher Staubsauger ist für Tierhaare und Hartböden am besten?“ Eine andere Person sucht Alternativen zu neu gekauften Apple EarPods. MelonMe kann, sofern Quelle und konkrete Community es erlauben:
+### 1.2 Verbindliche Nichtziele
 
-1. die Frage in Originalsprache erkennen, Aktualität und tatsächlichen Beratungsbedarf bewerten;
-2. fehlende Anforderungen und Produktkategorien erschließen, ohne unbekannte Fakten zu erfinden;
-3. aktuelle, prüfbare Produktdaten und gegebenenfalls verfügbare Angebote verschiedener Händler recherchieren;
-4. bis zu drei **tatsächlich geeignete** Produkte mit erkennbaren Vor- und Nachteilen vergleichen; die Anzahl ist keine Pflicht;
-5. eine sachliche Antwort erstellen, die zur konkreten Frage passt, die Unsicherheit kenntlich macht und wirtschaftliche Beziehungen transparent offenlegt;
-6. erst nach Prüfung von Forum-, Konto-, Affiliate- und Veröffentlichungsrechten antworten;
-7. ausschließlich erlaubte, korrekt gekennzeichnete Vergütungslinks einfügen;
-8. spätere Ergebnisse, einschließlich widerrufener Provisionen und tatsächlicher Auszahlung, auswerten.
+- Keine neue zentrale Commerce-, Affiliate-, Revenue-, Werbe- oder Marketing-Infrastruktur für den gesamten FruitStack.
+- Keine zentrale Orchestrierung oder zweite allgemeine KI-/Modell-, Gedächtnis-, Governance-, Projekt-, Kosten- oder Lernplattform.
+- Keine TonnEstate-spezifische Werbefunktion, keine Advertising-Agentur, keine eigenen Paid-Ads-Kampagnen.
+- Kein unaufgeforderter Massenspam, keine automatischen Beiträge auf nicht freigegebenen Plattformen, keine gefälschten Erfahrungen, Bewertungen oder Identitäten.
+- Kein eigenständiges SaaS-/White-Label-Geschäft, kein AdCP-/Prebid-Werbemarktplatz und kein Aufbau einer eigenen Community als automatische Projekterweiterung.
+- Keine unbewiesene Annahme, dass ein vorhandener Affiliate-MCP bereits einen autorisierten, monetarisierbaren Vertriebskanal darstellt.
 
-**Beispiel:** Ein aus drei Produkten bestehender Vergleich ist nur sinnvoll, wenn echte, aktuelle Unterschiede existieren. Die Produktauswahl darf nicht durch die Höhe der Provision zu einer objektiv schlechteren Empfehlung verzerrt werden. Bei fehlender Eignung eines vergüteten Angebots gibt es gegebenenfalls eine hilfreiche Antwort **ohne** Affiliate-Link oder gar keine Aktion.
+Eigene oder partnerschaftliche Veröffentlichungsflächen sind **mögliche zulässige Kanäle** innerhalb einer ausdrücklich beschlossenen Strategie, kein impliziter Auftrag, Websites, Newsletter oder Portale zu bauen.
 
-Die zugrunde liegende Chance ist **nicht** auf einzelne Produkte, Foren, Sprachen oder Länder festgelegt. MelonMe soll erst auf Basis verlässlicher Daten herausfinden, welche Kombinationen von Themen, Angeboten, Veröffentlichungsformaten und Plattformen wirtschaftlich sinnvoll sind.
+### 1.3 Seitlicher FruitStack-Vertrag
 
-## 3. Nichtziele und harte Grenzen
+FruitStack bleibt Herr über Rollen, Aufträge, Modelle, Budgets, Ausführung, Sicherheitsgrenzen und kanonische Arbeitsnachweise. MelonMe nimmt einen begrenzten Auftrag entgegen, liefert fachlich nachvollziehbare Zustände, externe Belege und wirtschaftliche Ergebnisse zurück und nutzt vorhandene Dienste, soweit ihre Verträge **tatsächlich** geprüft wurden.
 
-- Kein Kauf eigener Google-, Meta-, TikTok- oder sonstiger Anzeigen als Geschäftsmodell.
-- Keine spezielle Integration für TonnEstate oder eine andere einzelne Anwendung als Projektzweck.
-- Kein massenhaftes, unerwünschtes oder verdeckt werbliches Posten.
-- Kein Erzeugen künstlicher Diskussionen, fingierter Bewertungen, erfundener Produkterfahrungen oder vorgetäuschter Unabhängigkeit.
-- Kein Aushebeln von Plattformregeln, technischen Sperren, Rate Limits, Moderation, Identitäts- oder API-Anforderungen.
-- Kein stillschweigendes Einsetzen von Affiliate-Links auf Plattformen, die dafür nicht zugelassen sind.
-- Keine Behauptung erzielter Einnahmen allein aufgrund von Klicks oder statistischen Prognosen.
-- Keine Festlegung auf ein bestimmtes Partnernetzwerk, eine Plattform oder eine Warengruppe vor ihrer technischen und vertraglichen Prüfung.
+Aus den dokumentierten Aufgaben der bestehenden Repositories ergeben sich mögliche Wiederverwendungsfelder: CherryMe für quellenbasierte Verifikation, PlumMe für kostenbewusste Modellversorgung, PeachMe für Sitzungs-/Ausführungskontrollen, MangoMe für dauerhafte Arbeit und Evidenz, OrangeMe für Projektanbindung und AppleMe für Assurance. **Keine dieser Schnittstellen wird hier als bereits erfolgreich mit MelonMe integriert dargestellt.**
 
-Eine technisch vorhandene Schreib-API ist **keine** automatische rechtliche oder vertragliche Erlaubnis, kommerzielle Beiträge zu veröffentlichen.
+Insbesondere darf MelonMe **keinen** zweiten allgemeinen Router, Ledger, Claim-Store oder Agenten-Harness etablieren. Fachliche Partner- und Transaktionsbelege gehören in eine schmale, mit dem bestehenden System kompatible Projektion; eine zweite Autorität für FruitStack-Projektzustände ist ausgeschlossen. Dieses öffentliche Dokument enthält bewusst keine privaten Implementierungsdetails anderer FruitStack-Repositories.
 
-## 4. Wirtschaftlicher Steuerungsansatz
+## 2. Zentrale AVCOS-Lehre: Partnerzugänge sind ein echtes Betriebsproblem
 
-MelonMe soll zunächst Hypothesen bewerten, nicht blind Content produzieren. Beispiele:
+Bei AVCOS waren Affiliate-/Partnerzugänge nur teilweise organisiert: Bewerbungen, Freischaltungen, Zugangsdaten, Programme, erlaubte Kanäle und Reporting waren teils unklar oder schlecht dokumentiert. Eine Integration auf dem Papier ist damit wirtschaftlich wertlos. MelonMe darf diesen Fehler **nicht wiederholen**.
 
-- Sind aktuelle Fragen mit eindeutiger Kaufabsicht wirtschaftlicher als allgemeine Produktdiskussionen?
-- Bei welcher Sprache, Kategorie und Quellplattform führt ein qualifizierter Beitrag häufiger zu bestätigten Käufen?
-- Welche Form einer ehrlichen Kaufberatung hilft dem Nutzer und erzeugt dabei messbar mehr gültige Provisionen?
-- Welcher Partner führt bei vergleichbaren geeigneten Angeboten zu höherem **Nettoertrag**?
-- Wann sind Recherche-, Modell-, API- und Prüfkosten höher als der realistisch erreichbare Erlös?
+### 2.1 Eine kleine fachliche Partner-/Capability-Registry — keine neue Plattform
 
-**Leitkennzahlen:**
+Pro **konkreter Kombination** aus Partnerprogramm, Advertiser, Land, Affiliate-Konto, genehmigter Publisher-Eigenschaft beziehungsweise Domain, erlaubtem Kanal und Provisionsmodell sind folgende Nachweise nötig:
 
-- **Bestätigter Nettoertrag:** bestätigte, gültige Provisionen abzüglich zurechenbarer variabler Kosten; separate Sicht auf noch nicht ausgezahlte Beträge.
-- **Realisierten Geldzufluss:** tatsächlich ausgezahlte Provisionen abzüglich zurechenbarer Kosten.
-- **Deckungsbeitrag je zulässiger Aktion:** wirtschaftliches Ergebnis je tatsächlich freigegebener Veröffentlichung.
-- **Effizienz der Recherche:** wirtschaftliches Ergebnis je geprüftem Kandidaten beziehungsweise je Kosten der Opportunity-Suche.
-- **Qualität und Zulässigkeit:** Regelverstöße, entfernte Beiträge, begründete Beschwerden, Veraltung, Antwortnützlichkeit.
-- **Unsicherheit:** Stichprobenumfang, Verzögerung, unbekannte Attribution und Unsicherheitsintervalle.
-
-Zu trennen sind: Impression (sofern vom Plattformbetreiber bereitgestellt), Klick, gemeldete Conversion, offene Provision, bestätigte Provision, Storno/Chargeback, Auszahlung. Die Definition von Conversion und Zuordnung richtet sich nach dem konkreten Partnervertrag.
-
-**Wirtschaftliches Grundmodell:** Nettoertrag = gültige Provisionen − zurechenbare Kosten. Modelle, Mitarbeiterfreigaben, Datenbeschaffung, API-Aufrufe und Plattformbetrieb müssen als Kosten erfassbar sein. Prognostizierte Gewinne werden nicht als realisierte Gewinne ausgegeben.
-
-## 5. Fachlicher End-to-End-Prozess
-
-### 5.1 Discovery: erlaubte Gelegenheiten finden
-
-MelonMe nutzt ausschließlich zugelassene APIs, Feeds, Suchschnittstellen und sonstige rechtmäßig nutzbare Quellen. Pro Gelegenheit werden mindestens Quellplattform, Community, Thread-ID/URL, Veröffentlichungszeit, Sprache, Land soweit belastbar ableitbar, Thema, aktuelle Aktivität und erkannte Kaufabsicht erfasst.
-
-Ein Aktualitätsmodell berücksichtigt sowohl das Alter der Frage als auch neue Antworten, veränderte Produktverfügbarkeit und den Zeitpunkt einer möglichen eigenen Reaktion. Alte oder gelöste Diskussionen werden nicht allein aus Umsatzinteresse wiederbelebt.
-
-### 5.2 Eligibility Gate: darf MelonMe hier überhaupt mitwirken?
-
-Jeder Kandidat durchläuft **vor** Erstellung einer öffentlichen Aktion ein Gate:
-
-- Ist das Lesen beziehungsweise die Datennutzung unter den geltenden Bedingungen erlaubt?
-- Gibt es eine gültige Berechtigung für die kommerzielle Nutzung und gegebenenfalls die API?
-- Erlauben Plattform **und** konkrete Community kommerzielle/automatisierte Beiträge?
-- Ist das Konto entsprechend autorisiert, authentisch und transparent?
-- Erlaubt der konkrete Affiliate-Partner Links auf dieser Domain und in dieser Beitragsform?
-- Sind lokale Werbekennzeichnung, Datenschutz, Produktrecht und sonstige Beschränkungen erfüllt?
-- Sind technische Grenzwerte und interne Qualitäts-/Budgetregeln eingehalten?
-
-**Default deny:** Eine fehlende, unklare oder abgelaufene Erlaubnis bedeutet: keine Veröffentlichung. Das System kann die Chance für eine manuelle rechtliche Prüfung vormerken, aber die Blockade nicht selbst umgehen.
-
-### 5.3 Independent Product Intelligence
-
-Die Produktauswahl prüft Anforderungen aus der Frage, objektiv relevante Merkmale, Zielgruppen-Eignung, verfügbare Hersteller-/Händlerdaten, Aktualität, Preise inklusive Währung und Lieferland, Verfügbarkeit und überprüfbare Quellen.
-
-- Produktfakten erhalten Herkunft, Abrufzeitpunkt und Qualitätsstatus.
-- Preise werden nur als aktuell bezeichnet, solange die Quelle und ihre Aktualität dies erlauben.
-- Geschützte Bilder, Rezensionen oder Händlerdaten werden nicht ohne entsprechende Rechte übernommen.
-- Es darf keine falsche Behauptung eigener Tests, Käufe oder persönlicher Erfahrung geben.
-- Provisionen sind ein **nachgelagerter** Faktor bei mehreren fachlich geeigneten Angeboten, nicht Ersatz für die fachliche Eignungsbewertung.
-- Gibt es keine verlässlichen Produktdaten, wird keine scheinbar präzise Empfehlung veröffentlicht.
-
-### 5.4 Response Intelligence
-
-MelonMe erstellt eine Antwort in der Sprache der Originaldiskussion, mit kulturell und sprachlich passender, aber inhaltlich gleicher Werbetransparenz. Die Antwort reagiert auf konkrete Fragen und benennt relevante Einschränkungen. Es wird keine Pflicht zur dreispaltigen Vergleichstabelle oder zur Erwähnung dreier Händler geben; das Format folgt dem Informationsbedarf und den technischen Möglichkeiten der Plattform.
-
-Vor einer Freigabe werden technische Daten, Sprache, Nachvollziehbarkeit, Claims, Links, Werbekennzeichnung und Diskussionskontext unabhängig geprüft. Veröffentlichte Inhalte sollen als kommerziell beziehungsweise KI-unterstützt erkennbar sein, wenn dies erforderlich oder zugesagt ist.
-
-### 5.5 Authorized Publishing
-
-Ein Plattformadapter darf nur mit gültig erteilter Berechtigung und unter Einhaltung der Plattformbedingungen schreiben. Erste Stufe: **Entwurf mit menschlicher Freigabe**. Eine spätere begrenzte Autopublikation darf nur nach gesonderter Freigabe eines konkret nachgewiesenen zulässigen Plattform-/Community-Kontexts eingeführt werden.
-
-Zu protokollieren sind Ziel, konkrete Freigabe, unveränderlicher Entwurfs-Hash, Veröffentlichungszeit, Antwort-ID, API-Ergebnis, tatsächliche Existenzprüfung und mögliche spätere Moderationsereignisse. Wiederholte oder doppelte Veröffentlichungen verhindern Idempotency Keys und deduplizierte Thread- und Anlass-Fingerprints.
-
-### 5.6 Tracking, Provisionen und Reconciliation
-
-Nach Veröffentlichung werden nur solche Sichtbarkeits-, Klick- und Interaktionsdaten gesammelt, die rechtmäßig verfügbar sind. Affiliate-Partnerdaten werden über zulässige Sub-IDs, Campaign-IDs, Reports, Webhooks oder APIs eingebunden, soweit das jeweilige Programm diese Mechanismen unterstützt.
-
-MelonMe führt ein unveränderliches wirtschaftliches Ereignisjournal. Partnerreports sind die Referenz für provisionierte Transaktionen; Auszahlungen werden separat abgeglichen. Spätere Stornos, Betrugsprüfungen, Währungsänderungen und Rückforderungen korrigieren den wirtschaftlichen Stand nachvollziehbar.
-
-Eine fehlende Attribution ist **unbekannt**, nicht automatisch „kein Kauf“. Andere Aktivitäten dürfen nicht fälschlich einer MelonMe-Antwort zugerechnet werden.
-
-## 6. Selbstlernende Entscheidungslogik
-
-Die KI soll zunehmend selbst entscheiden, **welche erlaubten Chancen wie bearbeitet werden**. Ihre Lernschleife umfasst:
-
-1. **Hypothese**: z. B. technischer Produktvergleich in einer erlaubten Community.
-2. **Kontext**: Thema, Sprache, Aktualität, Kaufindizien, Plattform, erlaubte Aktionsformen.
-3. **Mögliche Aktionen**: ignorieren, weiter recherchieren, menschlich prüfen lassen, hilfreiche Antwort ohne Link, freigabepflichtige Affiliate-Antwort.
-4. **Auswahl**: erwarteter Nutzen und wirtschaftliches Potenzial unter harten Qualitäts-, Rechts- und Kostengrenzen.
-5. **Feedback**: Moderation, verfügbare Interaktion, Klicks, Partnerereignisse, bestätigte Provisionen, Kosten.
-6. **Lernen**: Modellaktualisierung mit kontrollierten Experimenten, Vergleich zu einer unveränderten Basisstrategie und dokumentierten Fehlergrenzen.
-
-Für späteres Online-Lernen kommen **Contextual Bandits** in Betracht. Dieser Ansatz ist sinnvoll, weil nur das Ergebnis einer tatsächlich gewählten Aktion beobachtet wird. Für belastbare Off-Policy-Auswertungen müssen die Aktionsauswahl und, falls experimentell randomisiert, ihre Auswahlwahrscheinlichkeiten gespeichert werden. Eine komplexe Reinforcement-Learning-Infrastruktur ist für den Beginn nicht erforderlich.
-
-**Nicht verhandelbar:** Das Lernsystem darf niemals selbst das Eligibility Gate, Werbekennzeichnung, Zulassungsbedingungen oder Sicherheitsregeln aufweichen, nur weil eine verbotene Aktion theoretisch mehr Umsatz verspricht. Es darf unzulässige oder manipulative Kommunikationsmuster nicht als „erfolgreiche Strategie“ erlernen.
-
-Empfohlene Reihenfolge: zunächst dokumentierte Heuristiken und Shadow-Mode, dann kontrollierte Varianten in zugelassenen Umgebungen, anschließend datenbasierte Auswahl. Wirkungs- und Umsatzsteigerungen werden erst bei ausreichenden Daten behauptet; Traffic, Saison, Produkttrend, Verzögerungen und Partneränderungen sind relevante Störfaktoren.
-
-## 7. Zielarchitektur
-
-MelonMe bildet ein **eigenständiges Repository und einen MCP-fähigen Service**. FruitStack übernimmt die übergeordnete Orchestrierung; MelonMe verantwortet die fachspezifische Monetarisierungsentscheidung und ihre prüfbaren Ergebnisse. Bereits existierende Komponenten werden erst nach Repository-Prüfung verwendet; dies ist **keine Behauptung**, dass passende FruitStack-Schnittstellen schon implementiert sind.
-
-| Modul | Aufgabe |
+| Feld | Verbindliche Bedeutung |
 | --- | --- |
-| Source & Opportunity Connectors | Zugelassene Diskussions-/Forenquellen, Feeds, Recherche, Deduplikation |
-| Policy & Permission Engine | Plattform-, Community-, Länder-, Konto- und Partnerregeln; Default-deny |
-| Product & Offer Intelligence | Produktdaten, Quellenvalidierung, unabhängiger Vergleich, Partnerangebote |
-| Response & Quality Engine | Mehrsprachige, sachliche Antworterstellung und Faktenkontrolle |
-| Publishing Gateway | Freigaben, zugelassene Adapter, Idempotenz, Ergebnisprüfung, Löschung/Korrektur soweit erlaubt |
-| Revenue Ledger | Sub-ID-Zuordnung, Ereignisjournal, Provisionen, Stornos, Auszahlungen, Kosten |
-| Learning & Experimentation | Hypothesen, Strategien, kontrollierte Tests, Nettoertrag und Unsicherheit |
-| MCP Interface | Typisierte, versionierte Werkzeuge zum Auslösen und Beobachten der Workflows |
+| `PARTNER_ID`, `PROGRAM_ID`, `MARKET` | Eindeutige Partner-, Programm- und Länderzuordnung |
+| `APPLICATION_STATUS` | Beantragung, Prüfung, Ablehnung, Freigabe und letzter nachgewiesener Stand |
+| `CONTRACTUALLY_PERMITTED` | Explizit erlaubte Publikationsorte, Inhalte, KI-Nutzung und Affiliate-Link-Formate |
+| `API_AVAILABILITY` | Welche Recherche-, Link-, Reporting- und Transaktionsschnittstellen sind **real** verfügbar? |
+| `CREDENTIAL_REF` | Nur eine sichere Referenz auf vorhandene Credentials, niemals Klartext im Repository oder Agentenprompt |
+| `ACCOUNT_PERMISSIONS` | Tatsächlich freigeschaltete Rechte; ein gültiges Login bedeutet nicht automatisch Programmfreigabe |
+| `COMMISSION_MODEL` | Provisionsart, Qualifizierung, Storno-/Auszahlungsregeln, Länder-/Produktbeschränkungen |
+| `ATTRIBUTION` | Erlaubte Sub-IDs, Trackingfenster, Last-Click-/Code-Regeln, verwendbare Reports |
+| `HEALTH` | Letzter authentifizierter Probeabruf, Fehlerklassifikation, Zeitstempel, Nachweis |
+| `EVIDENCE` | Vertrag/Programmbedingungen, Genehmigungsnachricht, konkrete Quelle, Version und Gültigkeitsdatum |
 
-### 7.1 Vorgesehene MCP-Werkzeuge (Schnittstellenentwurf, keine Implementierung)
+Reine Katalogeinträge, ein öffentliches GitHub-Repository, eine dokumentierte API oder ein gespeicherter Schlüssel beweisen **keine** operative Nutzbarkeit.
 
-- **discover_opportunities:** zulässige Quellen nach Kaufberatungsfällen untersuchen.
-- **inspect_opportunity:** Thread-Kontext, Sprache, Aktualität und Quellenlage abrufen.
-- **check_eligibility:** sämtliche Publikations- und Affiliate-Berechtigungen prüfen.
-- **research_offers:** passende Angebote mit Quellen, Verfügbarkeit und Partnerbedingungen ermitteln.
-- **draft_comparison:** eine sprach- und kontextgerechte Antwort entwerfen.
-- **audit_response:** Fakten, Regelkonformität, Links und Kennzeichnung validieren.
-- **request_publication_approval:** unveränderlichen Entwurf zur Freigabe vorlegen.
-- **publish_approved_response:** ausschließlich freigegebenen und erneut validierten Entwurf über den erlaubten Kanal senden.
-- **sync_revenue_events:** Partnerereignisse und Abrechnungen importieren.
-- **evaluate_strategy:** Qualitäts-, Kosten- und Erlösdaten auswerten.
-- **get_melonme_status:** Status, offene Freigaben, Fehler, Kosten und Ergebnisse anzeigen.
-- **stop_publication:** Veröffentlichungen global oder je Connector stoppen; blockiert neue Aktionen sofort.
+**Nachweisleiter:** `DEFINED ≠ AVAILABLE ≠ AUTHORIZED ≠ VERIFIED ≠ PROFITABLE`.
 
-Alle Schreibwerkzeuge benötigen explizite rollenbasierte Berechtigungen. Lesen, Entwurf, Freigabe, Veröffentlichung, Partnerabrechnung und Konfigurationsänderung werden getrennt autorisiert.
+### 2.2 Verbindlicher Zugangslifecycle
 
-### 7.2 Fachliche Zustände
+`DISCOVERED → APPLICATION_REQUIRED → APPLICATION_SUBMITTED → PENDING_APPROVAL → APPROVED → CREDENTIAL_AVAILABLE → VERIFIED_OPERATIONAL`
 
-**Opportunity:** discovered → eligible/ineligible/unknown → qualified/rejected → researched → drafted → audited → approval_pending/approved/rejected → published/failed/skipped.
+Aus jedem Stadium können abweichende Zustände entstehen: `WAITING_FOR_CREDENTIAL`, `LEGAL_REVIEW_REQUIRED`, `ACCESS_FAILED`, `REJECTED`, `SUSPENDED`, `EXPIRED`, `REVOKED`.
 
-**Monetarisierung:** link_created → click_observed (optional) → partner_conversion_reported → commission_pending → commission_approved/commission_rejected/commission_reversed → payout_reconciled.
+Die Zustände werden anhand **externer Belege** gesetzt, nicht aus KI-Vermutungen. `APPROVED` ist ohne nutzbaren Zugang noch **nicht** `VERIFIED_OPERATIONAL`. Ein erfolgreicher API-Aufruf ist ohne Freigabe des konkreten Werbekanals noch **nicht** publikationsfähig. Partner- und Werbekanalberechtigung müssen getrennt nachgewiesen werden.
 
-Diese Zustände sind nicht gegenseitig gleichzusetzen. Historische Änderungen bleiben auditierbar.
+### 2.3 Umgang mit unvollständigen oder gescheiterten Zugängen
 
-### 7.3 Datenmodell: Mindestfelder
+- Die KI darf Zulassungsanforderungen, Vertragsklauseln, Bewerbungsformulare und Dokumentationslücken recherchieren sowie einen vollständigen **Antragsentwurf** vorbereiten.
+- Kontoeröffnung, Identitätsprüfung, Vertragsannahme und die Offenlegung erforderlicher geschäftlicher Angaben unterliegen den tatsächlichen Berechtigungen und gegebenenfalls menschlicher Freigabe. Keine erfundenen Firmen-, Domain- oder Traffic-Angaben.
+- Fehlende Secrets führen zu **WAITING_FOR_CREDENTIAL**, fehlende Programmgenehmigung zu einem gesonderten Freigabestatus; technische Fehler erhalten nachvollziehbare Ursachen und begrenzte Wiederholungsversuche.
+- Nach einem Fehlschlag: **Diagnose → fehlende Nachweise beschaffen → regulär erneut prüfen → gegebenenfalls anderen rechtmäßigen Partner suchen**. Kein stillschweigendes Umschalten auf nicht genehmigte Accounts, andere Identitäten, unerlaubte Kanäle oder Trackingumgehungen.
+- Der fehlgeschlagene **Mechanismus** wird vorläufig blockiert, nicht das gesamte Geschäftsmodell verworfen.
+- Vor jeder realen Veröffentlichung wird geprüft, ob der spezifische Partnerzugang noch aktiv, vertragskonform und für den Zielkanal freigegeben ist.
+- Zugänge werden mit Fristen und Zuständigkeit dokumentiert; niemand muss den Zustand aus verstreuten Chats, Screenshots oder E-Mails erraten.
 
-- Opportunity-ID, Quelle, Thread-ID, Zeitstempel, Sprache, lokale Regelversion, API-Berechtigung und Community-Policy.
-- Prüfresultat samt Belegen, Freigabe und Gültigkeitszeitpunkt.
-- Produkt-/Angebots-ID, Preis-/Verfügbarkeitsquelle, Abrufzeitpunkt, Partner-ID und offengelegte Vergütungsbeziehung.
-- Entwurfs-/Antwortversion, Content-Hash, Experiment-ID, Modellversion, Veröffentlichungsergebnis und Moderationsstatus.
-- Verknüpfbare, zulässige Affiliate-Sub-ID, Partnertransaktion, Provisionsstatus, Währung, Auszahlung und Kostenbuchungen.
-- Datenherkunft, Qualitätsstatus, Lösch-/Aufbewahrungsregeln und Änderungsprotokoll.
+Dies ist die minimale, geschäftsnotwendige Zugangsverwaltung von **MelonMe**, keine allgemeine FruitStack- oder Affiliate-Account-Plattform.
 
-Datenschutzgrundsatz: so wenig personenbezogene Daten wie möglich; keine verdeckte Personenprofilierung; keine unnötige Speicherung von Forennutzern oder sensiblen Daten. Partnerdaten, die nicht für Marketing-Attribution oder Abrechnung freigegeben sind, bleiben außerhalb des Lernsystems.
+## 3. Zulässigkeit: Doppeltes Gate vor jeder kommerziellen Aktion
 
-## 8. Donoren und externe Integrationen
+Jeder externe Vorgang benötigt zwei voneinander unabhängige positive Ergebnisse:
 
-Auswahl, Prüfstatus und Lizenz müssen vor jeglicher Codeübernahme dokumentiert werden. **Ein verlinktes Projekt ist kein Nachweis einer bereits erfolgten Integration.**
+**Distribution Gate:** Darf MelonMe in der konkreten Community mit diesem Konto, dieser Art von KI-Unterstützung, dieser Kennzeichnung und dieser Beitragsform tätig werden?
 
-| Kandidat | Potenzieller Nutzen | Einordnung |
+**Monetization Gate:** Ist das konkrete Partnerprogramm für das Land, den Publisher, die Domain, die Inhaltsart und diesen Trackinglink **nachweislich** genehmigt, aktiv und abrechenbar?
+
+Daneben gelten Datennutzungsrechte, Urheberrecht, Datenschutz, plattform- und länderspezifische Werbungsvorschriften sowie lokale Moderationsvorgaben.
+
+Beide Gates verwenden `ALLOW / DENY / UNKNOWN`, Beleg, Prüfdatum, Ablaufdatum und klaren Grund. `UNKNOWN` ist eine **Recherche- oder Klärungsaufgabe**, keine pauschale endgültige Verurteilung. Für externe Veröffentlichung gilt aber immer **fail closed**: nur ein belegtes `ALLOW` erlaubt die betroffene Aktion. Eine hohe erwartete Provision darf die Regel nicht überstimmen.
+
+Wenn Partnerlinks nicht erlaubt sind, kann eine **nicht monetarisierte** sachliche Antwort nur dann als separate Handlung betrachtet werden, wenn **diese Handlung** ausdrücklich zulässig, hilfreich und autorisiert ist. Beiträge werden nicht als verdeckte Werbung getarnt.
+
+## 4. Der begrenzte End-to-End-Prozess
+
+### 4.1 Opportunity Discovery — proaktiv, nicht blind
+
+MelonMe erkennt aktuelle, relevante Kaufberatungsfragen in legal nutzbaren Quellen und Sprachen. Erfasst werden mindestens Thread-/Quellen-ID, Zeitpunkt, Sprache, relevanter Bedarf, Diskussionsstand und Nachweis der Datennutzbarkeit. Deduplikation verhindert dieselbe Bearbeitung mehrfach. Alte abgeschlossene Threads sind keine automatisch geeigneten Veröffentlichungsziele.
+
+**Günstig zuerst:** Regeln, Aktualität, Kaufabsicht und potenzieller Nutzen werden vor tiefem Produktscraping oder teuren Modellketten geprüft. Keine erfundene Quote wie „nur 3–5 %“: Die tatsächliche geeignete Teilmenge wird gemessen.
+
+### 4.2 Qualified Opportunity — erste wirtschaftliche Bewertung
+
+MelonMe prüft, ob ein möglicher legaler Kanal, ein nutzbarer Partner und ausreichend belastbare Produktinformationen überhaupt existieren. Die Bearbeitung kann in `NO_ACTION`, `RESEARCH_MORE`, `WAITING_FOR_PERMISSION`, `WAITING_FOR_CREDENTIAL` oder `READY_TO_DRAFT` enden.
+
+Ein fehlender Zugang ist ein **konkreter Blocker**, nicht eine Aufforderung, dennoch eine „monetarisierte“ Antwort zu simulieren.
+
+### 4.3 Independent Product Intelligence
+
+MelonMe prüft Produkte unabhängig von der Provisionshöhe auf Eignung, echte Unterschiede, Kompatibilität, relevante Nachteile, längerfristige Kosten und Herkunft der Daten. Produktidentitäten und Händlerangebote werden getrennt; dieselbe Ware bei drei Shops ist **nicht** automatisch ein Vergleich dreier Produkte.
+
+Preis, Währung, Verfügbarkeit, Versandland und Abrufzeitpunkt müssen aus legitim nutzbaren, ausreichend aktuellen Quellen stammen. Es gibt keine erfundenen Echtzeitpreise. Jede publizierte technische Behauptung benötigt einen nachprüfbaren Beleg; Unbelegtes wird weggelassen oder ausdrücklich als unbekannt markiert. Weder gekaufte Tests noch eigene Nutzung werden vorgetäuscht.
+
+Es gibt **keine feste Anzahl** zu empfehlender Produkte. Vergütung wird erst nach nachgewiesener fachlicher Eignung berücksichtigt.
+
+### 4.4 Answer & Review
+
+Die Antwort behandelt die konkrete Frage in ihrer Sprache, mit passenden Trade-offs und verständlicher Werbekennzeichnung. Die Form kann ein kurzer Vergleich, eine klar begründete Empfehlung, eine Rückfrage oder — wo zulässig und sinnvoll — eine Antwort ohne Link sein.
+
+Vor jeder Veröffentlichung: Faktenprüfung, Linkprüfung, Antwortnützlichkeit, Plattform- und Partnerrecht, Aktualität, Offenlegung und konkrete Aktionsfreigabe. Initial ist eine menschliche Einzelgenehmigung erforderlich. Spätere eng begrenzte Autopublikation ist nur nach gesondert belegter Betreiberberechtigung und definierter Freigabe möglich.
+
+### 4.5 Publish & Verify
+
+Nur berechtigte Schreibschnittstellen; kein Umgehen von Moderation, CAPTCHA, Limits oder Plattformverboten. Aufträge nutzen Ziel-ID, Entwurfs-Hash, Freigabe, Idempotency Key und externe Antwort-ID. Erfolg bedeutet erst **extern nachgewiesene** Veröffentlichung, nicht nur ein erfolgreiches internes Tool-Ergebnis. Entfernte Beiträge, Änderungsbedarf und Beschwerden werden als Qualitätsereignisse erfasst.
+
+### 4.6 Reconcile & Learn
+
+Erfasst werden nur rechtmäßig verfügbare Impressionen/Klicks, Partnertransaktionen, offene Provisionen, bestätigte Provisionen, Stornos und **tatsächliche Auszahlungen** sowie verursachte Kosten. Unbekannte Attribution bleibt `UNKNOWN`; verzögerte Transaktionen werden nicht zu voreilig negativem Training.
+
+MelonMe optimiert **nur seine eigenen fachlichen Entscheidungen**. Es darf nicht das übergreifende Modell- oder Agentenmanagement des FruitStacks übernehmen.
+
+## 5. Wirtschaftliche Steuerung ohne Scheingewinne
+
+**Operative Kennzahlen:** geprüfte Gelegenheiten, erteilte Publikationsrechte, aktive Partnerzugänge, autorisierte Veröffentlichungen, nicht publizierte Fälle, bestätigte Provisionsereignisse, Auszahlungen, abgebrochene Vorgänge und tatsächlich zugerechnete Kosten.
+
+**Bestätigter Deckungsbeitrag:** bestätigte provisionsfähige Erlöse abzüglich zurechenbarer variabler Kosten; Stornos werden später nachvollziehbar korrigiert.  
+**Realisierter Zahlungszufluss:** ausgezahlte Provisionen abzüglich bezahlter zuordenbarer Kosten, mit offener zeitlicher Abgrenzung.  
+**Erwartungswert:** nur als unsichere Schätzung für künftige Entscheidungen gekennzeichnet, niemals als gebuchter Umsatz.
+
+Kosten umfassen unter anderem Suche, Produktdaten, Modelle, Prüfschritte, APIs, Freigaben und Betrieb. Vertiefende Recherchen erhalten harte Budgets. Wenn das prognostizierte Erlöspotenzial die zusätzlichen Kosten nicht plausibel deckt, ist `NO_ACTION` eine erfolgreiche Sparentscheidung.
+
+Hohe Preise, SaaS- oder B2B-Produkte sind keine bevorzugten Vertikale per Beschluss. MelonMe darf sie als Varianten **innerhalb desselben Vermittlungsmodells** vergleichen. Conversion, Provisionsfreigabe, Stornos, Auszahlungsdauer und Vollkosten entscheiden. Wiederkehrende Provisionen zählen nur, wenn tatsächlich vertraglich zugesagt.
+
+**Trennung der Stufen:** `DISCOVERED ≠ ELIGIBLE ≠ PUBLISHED ≠ CLICKED ≠ COMMISSION_APPROVED ≠ PAID`. Weder eine simulierte Conversion noch ein bloßer Klick dürfen als wirtschaftlicher Erfolg bilanziert werden.
+
+## 6. Lernen: messbare Entscheidungen unter festen Grenzen
+
+MelonMe soll eigenständig herausfinden, welche Kombinationen aus Bedarf, Sprache, Kanal, Aktualität, Produktkategorie und Antwortformat nach Kosten wirtschaftlich lohnen. Die Regelprüfung ist **kein optimierbarer Reward**, sondern eine unveränderliche Zulässigkeitsbedingung.
+
+1. **Shadow Mode:** zulässige Datenquellen prüfen, Chancen entdecken, hypothetische Antworten/Recherchekosten messen, keine externen Posts und kein vorgetäuschter Conversion-Nachweis.
+2. **Kontrollierte reale Versuche:** nur aktive Partner, genehmigte Communities, verifizierte externe Antwort-IDs und begrenzte Kosten.
+3. **Reconciliation:** verfügbare Partnerergebnisse einschließlich Verzögerung, Storno, unbekannter Attribution und tatsächlicher Auszahlung.
+4. **Adaptive Auswahl:** zunächst nachvollziehbare Heuristiken, später Contextual Bandits nur mit ausreichend Daten, protokollierten Entscheidungswahrscheinlichkeiten und seriöser Evaluation.
+5. **Skalierung:** erst bei belegter legaler Handlungsfähigkeit, nachgewiesenen Einnahmen und aussagekräftigen Kosten-/Qualitätsdaten.
+
+Die KI darf weder wegen eines gesperrten Partners die Rechte umgehen noch anhand einzelner zufälliger Verkäufe andere Märkte vorschnell ausschließen. Nicht einmal eine große Shadow-Mode-Stichprobe beweist ohne reale Ausspielung echte Conversion-Raten.
+
+## 7. Technische Schnittstelle — klein und austauschbar
+
+### 7.1 Fachliche MCP-Oberfläche (Vorschlag, nicht implementiert)
+
+| Operation | Fachlicher Zweck |
+| --- | --- |
+| `discover` | Geeignete aktuelle Kaufberatungsgelegenheiten aus erlaubten Quellen erkennen |
+| `qualify` | Aktualität, Bedarf, grobe Wirtschaftlichkeit und vorhandene Berechtigungen prüfen |
+| `partner_access_status` | Tatsächlichen Freischaltungs-, Credential-, Vertrags- und API-Zustand nachweisen |
+| `research_products` | Geeignete Produkte, aktuelle Angebote und Quellen ermitteln |
+| `prepare_answer` | Fachlich begründeten, transparenten Entwurf erstellen |
+| `check_publication` | Distributions- und Monetarisierungs-Gates für die konkrete Aktion erneut prüfen |
+| `publish_approved` | Ausschließlich freigegebenen, überprüften Beitrag über den erlaubten Adapter senden |
+| `reconcile_commissions` | Partnerbelege, Stornos, Provisionen und Auszahlungen abgleichen |
+| `evaluate_outcomes` | Nettoertrag, Qualitätsrisiken und Lernsignale auswerten |
+| `stop` | Neue Veröffentlichungen sofort blockieren |
+
+MCP ist eine **Schnittstelle**, kein zweites Denk- oder Orchestrierungssystem. Verantwortlichkeiten, Schnittstellenversionen, Berechtigungen und tatsächliche Host-Kompatibilität sind vor Implementierung in den betreffenden FruitStack-Repositories zu prüfen.
+
+### 7.2 Daten- und Fehlerzustände
+
+Jede Gelegenheit besitzt eine fachliche ID, Quellreferenz, aktuelle Zulässigkeitsbelege, Produktquellen, unveränderliche Entwurfsversion, Freigabe, Veröffentlichungsreferenz, verknüpfbare Partner-Trackingkennung (sofern erlaubt) und spätere ökonomische Ereignisse.
+
+Eine externe Wirkung ist erst nach Rücklese-/Partnerbeleg **VERIFIED**. Scheitert ein Aufruf, lautet der Zustand nicht automatisch Erfolg oder vollständiger Geschäftsabbruch, sondern beispielsweise `EXTERNAL_OUTCOME_UNKNOWN`, `WAITING_FOR_CREDENTIAL`, `POLICY_DENIED` oder `PARTNER_REPORT_DELAYED`. Reconciliation muss idempotent sein.
+
+## 8. Donoren: Wiederverwendung nur für konkrete Lücken
+
+**Grundsatz:** Kein fremdes Framework wird zur Hauptarchitektur von MelonMe. Donoren werden einzeln gegen Aufgaben, Reife, Lizenz, Betriebskosten, Datennutzungsrechte und vorhandene FruitStack-Funktionen geprüft.
+
+| Donor/Quelle | Höchstens vorgesehener Zweck | Voraussetzung |
 | --- | --- | --- |
-| Discourse REST API | Beiträge lesen und – bei entsprechender Berechtigung – Antworten erstellen | Plattformadapter, keine generelle Veröffentlichungserlaubnis |
-| eBay Browse API / eBay Partner Network | Produktangebote und Affiliate-Tracking mit Campaign-/Sub-ID | Möglicher Angebots-/Attributionsadapter; Freigabe prüfen |
-| Awin und andere Affiliate-Netzwerke | Partnerprogramme, Angebotsdaten, Provisionen, Reporting | Mögliche Vertragspartner; Zugänge und Bedingungen prüfen |
-| Vowpal Wabbit | Contextual-Bandit-Algorithmen und experimentelle Auswertung | Forschungs-/Lern-Donor; Bedarf und Lizenz prüfen |
-| OpenRush oder vergleichbare Recherchequellen | Nachfrage-, Markt- und Wettbewerbsinformation, soweit sinnvoll und lizenziert | Optionaler Research-Adapter, nicht Voraussetzung |
-| MCP-Spezifikation | Standardisiertes Tool-Interface zum FruitStack | Technisches Integrationsprotokoll |
+| eBay Partner Network / eBay APIs | Angebote und nachweisbare Partner-/Transaktionsdaten | Individuell zugelassener Publisher, Kanal, Markt und Tracking |
+| Sovrn Commerce MCP | Potenziell Produkt-, Link- und Transaktionszugang | Tatsächlicher Account, Freigabe, Bedingungen und belastbarer Probeabruf |
+| impact.com MCP | Partnerprogramm-/Reportingzugang | Verfügbarer Account, passende Rolle und explizit zugelassene Nutzung |
+| Awin/andere Partnerprogramme | Weitere geeignete Partner, soweit real nutzbar | Freischaltung, erlaubte Quellen und Provisionsmessung |
+| Discourse API / erlaubte Foren-APIs | Autorisierte Discovery und Veröffentlichung | **Instanz-/Community-spezifische** ausdrückliche Rechte |
+| RSSHub / SearXNG | Preiswerte Suche in erlaubten Quellen | Datennutzung und Lizenz-/Betriebsprüfung; keine automatischen Publikationsrechte |
+| PriceBuddy/Produktdatenanbieter | Nur konkret benötigte Produkt-/Preisprüfung | Datenrecht, Verfügbarkeit, Lizenz und Datenqualität |
+| Contextual-Bandit-Bibliotheken | Spätere, fachlich begrenzte Optimierung | Genügend belastbare Ergebnisse; kein neues systemweites Lernframework |
 
-**Bewusst nicht im kritischen Pfad:** Adspirer/Claude Ads als Buy-Side-Kampagnentools, Revive und Prebid als klassische Adserving-/RTB-Komponenten sowie AdCP-Sales-Agent-Systeme. Sie bedienen einen anderen Schwerpunkt und dürfen MelonMe nicht zu einem kostenpflichtigen Anzeigenprojekt verschieben.
+Adspirer, Claude Ads, Prebid, Revive, White-Label-Affiliate-SaaS, allgemeine Revenue-Plattformen und universelle Agentenframeworks sind **nicht Bestandteil des kritischen Pfads**. Ihre Existenz ist kein Grund, MelonMes Scope auszuweiten.
 
-Vor Integration eines Donors sind mindestens Repository, Commit, Lizenz, Sicherheitszustand, Wartung, API-Grenzen, Datenschutz, Laufzeitkosten und erforderliche Verträge zu prüfen. Für gehostete Angebote wird ein austauschbarer Adapter bevorzugt; fremder geschlossener Quellcode wird nicht ungeprüft kopiert.
+**Donor-Nachweis:** Herkunft, genaue Version/Commit, Lizenz, Sicherheits- und Wartungsstatus, tatsächlich getestete Funktion, Abhängigkeiten und letzte erfolgreiche Integration. Vorher ist ein Donor nur ein **Kandidat**, keine vorhandene Funktion.
 
-## 9. Risiken und zwingende Schutzmaßnahmen
+## 9. Governance, Sicherheit und Veröffentlichung
 
-**Plattformrecht und Moderation:** Die Möglichkeit, eine Antwort technisch zu posten, reicht nicht aus. Reddit untersagt unter anderem wiederholte kommerzielle Bot-Posts; seine Entwicklerbedingungen beschränken kommerzielle Datennutzung ohne ausdrückliche Genehmigung. Ohne passende Genehmigung ist Reddit für MelonMe kein freier Standardkanal.
+- **Default deny** bei fehlenden oder ungeklärten Plattform- und Partnerrechten. Unklare Regeln werden aktiv recherchiert, nicht geraten.
+- Kein Account-Farming, keine gekauften/vorgealterten Konten, keine Identitätsumgehung und kein Missbrauch von Affiliate-Attribution, Coupons, Cookies oder Multi-Accounts.
+- Nur wahrheitsgemäße Kontodaten und notwendige Einwilligungen; niemals falsche eigene Produkterfahrungen oder fingierte unabhängige Empfehlungen.
+- Werbung beziehungsweise Provisionen sind deutlich in der Sprache der Antwort und gemäß den lokalen Vorschriften zu kennzeichnen.
+- Kein verstecktes Tracking. Datenschutz, Urheberrechte, Regeln des Forums und Programmbedingungen gelten nebeneinander.
+- Menschliche Freigabe vor den ersten externen Veröffentlichungen; spätere eng begrenzte Autonomie nur nach separater Autorisierung.
+- Verbindliche Ausgabenobergrenzen und Stop-Funktion. Ein entzogenes Programmrecht, geänderter Forenstatus oder fehlendes Tracking kann die betroffene Aktion sofort deaktivieren.
+- Für kritische Produktbehauptungen und Partnerrechte ist überprüfbare Evidenz erforderlich; KI-Urteile allein reichen nicht.
 
-**Affiliate-Verträge:** Händler beziehungsweise Netzwerk bestimmen, wo und wie Trackinglinks zulässig sind. Amazon verlangt unter anderem eine korrekte Werbekennzeichnung und prüft zugelassene Publisher-Seiten. Ein Affiliate-Link auf einer beliebigen fremden Forenseite darf nicht als erlaubt unterstellt werden.
+## 10. Entwicklungs- und Evidenzstufen
 
-**Transparenz:** Eine mögliche Provision ist in der jeweiligen Sprache deutlich, unmittelbar beim Beitrag beziehungsweise Link kenntlich zu machen. Es gibt keine vorgetäuschten unabhängigen Privatmeinungen und keine verdeckte Identität eines kommerziell agierenden Systems.
+### M0 — Grenzen und reale Zugänge nachweisen
 
-**Manipulation und Qualität:** Keine Wiederholung identischer Produkttexte, kein künstlicher Social Proof, keine Fake-Accounts, kein Hochvoten eigener Antworten, keine Umgehung von Captchas oder Moderation und keine unnötige Kontaktaufnahme mit Personen.
+**Ergebnis:** nachgeprüfte FruitStack-Schnittstellen; Donor-Kandidatenmatrix; mindestens ein konkret untersuchter zulässiger Veröffentlichungskanal und mindestens ein konkret untersuchtes Affiliate-Programm mit dokumentiertem Zugangsstatus. Noch nicht freigegebene Accounts sind als solche ausgewiesen; keine erfundenen Berechtigungen. Definiert sind Kostenbudget, Erfolgskriterien und Zuordnungsweg von Partnerereignissen.
 
-**Datenschutz und Urheberrechte:** Datenschutz- und Löschpflichten, zulässige Datennutzung, Quellen- und Nutzungsrechte, Tracking-Einwilligungen soweit erforderlich sowie landesspezifische Einschränkungen werden vor Aktivierung eines Landes-/Plattformadapters geprüft.
+**Abnahme:** jede geplante externe Operation ist einer belegten technischen, vertraglichen und fachlichen Voraussetzung zugeordnet. **Ein bloßer Partnerkatalogeintrag reicht nicht.**
 
-**Finanzrisiko:** Kostenobergrenzen pro Recherchelauf, Partner, Modell, Plattform, Land und Zeitfenster; automatische Unterbrechung bei unklarer Abrechnung, Regelverstoß oder negativen Qualitätssignalen.
+### M1 — Shadow Mode mit echten Opportunitäten
 
-**Messrisiko:** Kleine Stichproben, saisonale Produkte, Nichtverfügbarkeit, verzögerte Provisionen, Attribution-Fehler und Stornos können falsche Gewinner vortäuschen. Daher keine autonome Hochskalierung aufgrund weniger Klicks.
+**Ergebnis:** real zulässig gesammelte Fragen werden dedupliziert, klassifiziert und intern zu sachlich geprüften Vergleichen verarbeitet. Kosten, Blocker, Fehler und benötigte Freigaben werden gemessen. Keine echte Veröffentlichung, keine fingierte Provision. Anzahl der Fälle anhand von Varianz und Untersuchungsziel festlegen; keine willkürliche Stichprobenzahl als Profitabilitätsbeweis.
 
-## 10. Entwicklungs- und Abnahmestufen
+**Abnahme:** vollständiger Prüfpfad, überprüfbare Kosten und explizite `NO_ACTION`-, `WAITING_FOR_CREDENTIAL`- und `POLICY_DENIED`-Resultate.
 
-### M0 – Evidenzbasis und Integrationsinventar
+### M2 — Erste autorisierte externe Veröffentlichung
 
-**Liefergegenstand:** dokumentierter FruitStack-Abgleich, Donor-Register, Quellen-/Plattformmatrix, Affiliate-Vertragsmatrix, Daten- und Rechtekonzept.
+**Voraussetzung:** konkret nachgewiesene Publikations- und Partnerrechte sowie eine freigegebene Antwort. Eigene Testflächen belegen allein Technik, nicht externe Nachfrage.
 
-**Abnahme:** keine unbelegten Aussagen über bereits vorhandene Module; jeder geplante externe Schreib- und Provisionskanal hat einen ausgewiesenen Berechtigungsstatus. Nicht freigegebene Quellen bleiben gesperrt.
+**Abnahme:** tatsächliche externe Antwort-ID, Beleg der Anzeige und Kennzeichnung, keine Doppelveröffentlichung, sofortige Stop-Funktion.
 
-### M1 – Shadow-Mode ohne öffentliche Beiträge
+### M3 — Erster nachgewiesener Provisionskreislauf
 
-MelonMe entdeckt in ausdrücklich erlaubten Quellen aktuelle Kaufberatungsfälle, prüft deren Regeln, erstellt intern begründete Vergleichsentwürfe und kalkuliert erwartete Kosten. Es wird **nichts veröffentlicht** und kein künstlicher Umsatz angenommen.
+**Ergebnis:** Partnerreport wird zu einer autorisierten MelonMe-Aktion abgeglichen; Provision, eventuelle Stornos und tatsächlicher Zahlungseingang werden unterschieden.
 
-**Abnahme:** mehrere Sprachen über Testfixtures; reproduzierbare Deduplikation; nachprüfbare Quellen; nachvollziehbare NO_ACTION-Entscheidungen; feste Kostenlimits.
+**Abnahme:** ein vollständig nachweisbarer Ablauf bis zur **bestätigten** Provision und nach Auszahlung zum Zahlungsabgleich. Bei Null-Umsatz oder unbekanntem Partnerstatus wird genau das berichtet.
 
-### M2 – Genehmigter Veröffentlichungskanal
+### M4 — Belastbare Wirtschaftlichkeit und selbstlernende Auswahl
 
-Mindestens ein nachweislich zugelassener externer Kanal oder eine eigens kontrollierte Test-Community erlaubt kommerzielle, transparent gekennzeichnete Antworten. Veröffentlichungen benötigen explizite menschliche Einzel-Freigabe.
+**Ergebnis:** MelonMe nutzt echte Ergebnisdaten, hält Kostenlimits ein und lernt innerhalb der fachlichen Grenzen. Statistisch unzureichende Resultate werden nicht als profitable Strategie ausgegeben.
 
-**Abnahme:** exakter freigegebener Text veröffentlicht; Werbekennzeichnung korrekt; Antwort-ID zurückgelesen; Doppelposts verhindert; Stop-Funktion nachgewiesen. Ein eigener Testkanal belegt Technik, **noch keinen externen Markt**.
+**Abnahme:** reproduzierbare Auswertung von Kosten, Qualität, Programmlaufzeiten, Verzögerungen, Erträgen und NO_ACTION-Entscheidungen.
 
-### M3 – Vollständige Erlösrechnung
+### M5 — Geprüfte Übertragbarkeit
 
-Ein tatsächlich zugelassenes Partnerprogramm stellt nutzbare Links und verifizierbare Transaktions-/Provisionsdaten bereit.
+Weitere Sprachen, Produktbereiche und **ausdrücklich zugelassene** Communities werden als zusätzliche Instanzen **desselben** Geschäftsmodells freigegeben. Kein Ausbau zur plattformweiten Affiliate- oder AdTech-Architektur.
 
-**Abnahme:** demonstrierbarer Ablauf vom einzelnen veröffentlichten Beitrag über Partnerereignis bis zum Abgleich einer bestätigten Provision und gegebenenfalls späteren Auszahlung. Null Einnahmen werden korrekt als null ausgewiesen. Fehlende Partnerdaten werden als unbekannt markiert.
+**Abnahme:** unabhängige Berechtigungen und Budgets je Kanal/Partner; nachgewiesener externer Ergebnisabgleich und isolierbare Abschaltung.
 
-### M4 – Lernende Optimierung
+## 11. Projektentscheidungen, offene Belege und Definition of Done
 
-Das System unterscheidet mehrere zulässige Gelegenheiten/Antwortstrategien, berücksichtigt Kosten und Testqualität und lernt anhand externer Rückmeldungen. Kontrollgruppen, Verzögerungen und Konfidenz werden sichtbar.
+### Fest entschieden
 
-**Abnahme:** reproduzierbare Verbesserung gegenüber Baseline oder ein korrekt ausgewiesenes „noch kein statistisch belastbarer Nutzen“. Keine Aushebelung der harten Regeln.
+1. **MelonMe** ist ein eigenständiges, seitlich angedocktes Geschäftsmodell innerhalb des bestehenden FruitStacks.
+2. Es erkennt aktuelle Kaufabsichten, hilft fachlich, vermittelt unter expliziten Rechten und lernt aus verifizierten Ergebnissen.
+3. Plattform- **und** Partnerrechte sind getrennte harte Gates.
+4. Tatsächlich organisierte und getestete Affiliate-Zugänge sind eine **Voraussetzung**, keine nachträgliche Verwaltungsaufgabe.
+5. Kein zweiter allgemeiner FruitStack-Kern, keine Scope-Ausweitung durch Donor-Suche.
+6. Externes Ergebnis, genehmigte Provision und Auszahlung sind unterschiedliche Zustände; Prognosen werden nicht als Gewinne ausgegeben.
+7. Eine KI darf Research/Antragsvorbereitung unterstützen, aber Rechte, Verträge, Accounts oder Provisionsereignisse nicht erfinden.
 
-### M5 – Internationale Skalierung
+### Noch offen und nachzuweisen
 
-Weitere Länder, Sprachen, Plattformen und Affiliate-Programme werden nur nach dokumentierter rechtlicher, sprachlicher und technischer Prüfung aktiviert.
+- Welche konkret implementierten FruitStack-APIs stehen MelonMe tatsächlich zur Verfügung?
+- Welche Affiliate-Accounts und Programme sind schon **wirklich** freigeschaltet, welcher Zugriff fehlt und wer kann ihn rechtmäßig herstellen?
+- Welche publizierenden Communities erlauben kommerzielle KI-Unterstützung und Links tatsächlich?
+- Welche gültigen Produktdaten und Affiliate-Reports sind für genau diese Kombinationen verfügbar?
+- Welche Mindeststichproben und Beobachtungsfenster sind je Partner für sinnvolle Kosten-/Ertragsaussagen nötig?
 
-**Abnahme:** je Adapter isolierbare Berechtigungen, Budgets, Sprachqualität, Einnahmen, Compliance und sofortige Abschaltung.
+### Definition of Done
 
-Die Reihenfolge ist fachlich, **keine** Zusage über Termine, Umsätze oder bereits vorhandene Freigaben.
+MelonMe ist erst **wirtschaftlich nachgewiesen**, wenn ein klar autorisierter externer Beratungsvorgang mit überprüfbar geeigneten Angeboten, genehmigtem Partnerzugang, korrekt gekennzeichneter Veröffentlichung, nachvollziehbarer Partnertransaktion und korrekt abgeglichenem wirtschaftlichen Ergebnis stattgefunden hat. Echte Auszahlung wird separat nachgewiesen; **Profitabilität** erst anhand tatsächlicher zurechenbarer Kosten und hinreichender Beobachtung behauptet.
 
-## 11. Leitentscheidungen und offene Nachweise
+Ein erfolgreiches GitHub-Commit, eine bestandene Offline-Demo, ein veröffentlichter Text oder ein registrierter Affiliate-Account erfüllen diese Definition nicht allein.
 
-**Festgelegt:**
-- Name: MelonMe.
-- Eigener FruitStack-MCP-Service mit unabhängiger Ergebnisrechnung.
-- International und mehrsprachig, ohne unzulässige Massenveröffentlichung.
-- Nützliche Produktempfehlungen vor Provisionsoptimierung.
-- Nettoertrag und Auszahlung statt Klickzahl als primäre wirtschaftliche Messgrößen.
-- Selbstlernende Entscheidungen unter nicht überschreibbaren Regeln.
-- Main als dokumentierter Ausgangsstand; keine Behauptung fertiger Funktionen.
+## 12. Quellen und Gültigkeitsgrenzen
 
-**Vor Implementierung zu ermitteln, nicht zu erraten:**
-- Welche FruitStack-Module und MCP-Konventionen existieren im tatsächlichen Code?
-- Welche Quellen erlauben kommerzielle Datennutzung und Beiträge?
-- Welches Partnerprogramm akzeptiert die konkrete Traffic- und Veröffentlichungsquelle?
-- Welche Produktdaten, Preise und Linkparameter dürfen übernommen werden?
-- Welche externen Transaktionsdaten sind tatsächlich zur Attribution verfügbar?
-- Welche Datenschutz- und Werbekennzeichnungspflichten gelten je Land und Kanal?
-- Wie hoch sind reale Vollkosten und Auszahlungsverzögerungen?
+Die folgenden Links sind technische beziehungsweise regelbezogene **Startpunkte für die individuelle Prüfung**, keine Garantie, dass MelonMe eine Plattform dort kommerziell nutzen darf:
 
-## 12. Definition of Done für das Gesamtziel
+- [Model Context Protocol](https://modelcontextprotocol.io/specification/)
+- [Discourse API](https://docs.discourse.org/)
+- [eBay Developer – Browse API](https://developer.ebay.com/api-docs/buy/static/api-browse.html)
+- [Amazon PartnerNet – Programmregeln](https://partnernet.amazon.de/help/operating/policies)
+- [Reddit – Spam-Richtlinie](https://support.reddithelp.com/hc/de/articles/360043504051-Spam)
+- [Reddit – Data API Terms](https://redditinc.com/de-de/policies/data-api-terms)
+- [EU-Kommission – Influencer Legal Hub](https://commission.europa.eu/topics/consumers/consumer-rights-and-complaints/influencer-legal-hub_en)
+- [Vowpal Wabbit – Contextual Bandits](https://vowpalwabbit.org/tutorials/contextual_bandits.html)
 
-MelonMe ist erst dann als **wirtschaftlich funktionierendes System** zu bezeichnen, wenn nachweisbar:
-1. eine reale, zulässige Kaufberatungsgelegenheit identifiziert wurde,
-2. eine sachliche und transparent kommerzielle Empfehlung auf einem genehmigten Kanal erschienen ist,
-3. das Partnerprogramm eine tatsächlich zurechenbare, gültige Provision bestätigt hat,
-4. Kosten, Stornos und Zahlungseingang im Ledger korrekt abgebildet sind,
-5. die gewonnenen Messwerte eine spätere Entscheidung nachvollziehbar beeinflussen,
-6. alle Schritte einschließlich Nichtveröffentlichungen auditierbar sind.
+### Änderungsbilanz v0.1 → v0.2
 
-Ein technisch erfolgreich erzeugter Beitrag ist **kein** Nachweis eines profitablen Geschäftsmodells.
+- Systemgrenze gegenüber FruitStack und AVCOS-Lehren ausdrücklich festgeschrieben.
+- **Partnerzugang, Antragsstatus, Credential-Verfügbarkeit, konkrete Rechte und Live-Verifikation** zum eigenständigen fachlichen Gate erhoben.
+- `WAITING_FOR_CREDENTIAL`, fehlende Partnerfreigabe und tatsächliche technische Fehler getrennt; Diagnose/Rework statt voreiligem Geschäftsabbruch.
+- Klare Trennung von Discovery, Distributionserlaubnis, Partnererlaubnis, externem Ergebnis, Provision und Auszahlung.
+- Proaktive, aber kostenbegrenzte Opportunitätssuche und echte unabhängige Produktverifikation aufgenommen.
+- M0/M1/M2/M3-Abnahmekriterien so formuliert, dass interne KI-Aktivität **nicht** als realer Geschäftserfolg ausgegeben werden kann.
+- B2B-/White-Label-, Publisher- und generische Affiliate-Plattform-Ideen ausdrücklich aus dem MelonMe-Scope herausgehalten.
+- Donoren auf austauschbare, konkret erforderliche Fachadapter begrenzt; FruitStack-Funktionen werden nicht doppelt entwickelt.
 
-## 13. Verifizierbare Primärreferenzen (Stand: 28.10.2026)
-
-- Reddit, Spam Policy: https://support.reddithelp.com/hc/de/articles/360043504051-Spam
-- Reddit, Bedingungen für Entwickler*innen: https://redditinc.com/de-de/policies/developer-terms
-- Reddit, Daten-API-Bedingungen: https://redditinc.com/de-de/policies/data-api-terms
-- Discourse API: https://docs.discourse.org/
-- Amazon PartnerNet, Richtlinien: https://partnernet.amazon.de/help/operating/policies
-- Amazon PartnerNet, Werbekennzeichnung: https://partnernet.amazon.de/help/node/topic/GPXFHVYZMTGPUMPE
-- Europäische Kommission, Influencer Legal Hub: https://commission.europa.eu/topics/consumers/consumer-rights-and-complaints/influencer-legal-hub_en
-- eBay, Browse API und Affiliate-Tracking: https://developer.ebay.com/api-docs/buy/static/api-browse.html
-- eBay, EPN Tracking Links: https://developer.ebay.com/api-docs/buy/static/ref-epn-link.html
-- Vowpal Wabbit, Contextual Bandits: https://vowpalwabbit.org/tutorials/contextual_bandits.html
-- MCP-Spezifikation: https://modelcontextprotocol.io/specification/
-
-**Quellen- und Compliance-Hinweis:** Die Referenzen belegen dokumentierte Anforderungen und technische Möglichkeiten; sie ersetzen weder eine individuelle Plattformfreigabe noch eine juristische Prüfung für einen konkreten Veröffentlichungskanal. Dieses Dokument ist ein fachliches Zielkonzept und keine Dokumentation bereits implementierter Funktionalität.
+**Dieses Dokument ist ein Konzept und keine Zusicherung bereits vorhandener Partnerverträge, Accounts, APIs, Berechtigungen, Agentenintegrationen oder Umsätze.**
