@@ -232,7 +232,8 @@ def _offer_match(question: dict, offer: dict, market: str) -> float:
 
 
 def find(context: dict, awin: Awin | None = None,
-         inventory_lookup: Any | None = None) -> dict:
+         inventory_lookup: Any | None = None,
+         post_history: Any | None = None) -> dict:
     """Rank host-supplied real questions and real offers without inventing inventory.
 
     This function is deliberately host-driven: FruitStack discovers questions and
@@ -252,6 +253,27 @@ def find(context: dict, awin: Awin | None = None,
     except (TypeError, ValueError):
         limit = 20
         errors.append({"code": "INVALID_LIMIT_USED_DEFAULT"})
+    # History stores only a discussion hash/time/receipt. Skip answered targets
+    # before any network inventory lookups, without affecting other discussions.
+    active_questions: list[dict] = []
+    posted: list[dict] = []
+    for question in questions[:500]:
+        if not isinstance(question, dict):
+            continue
+        if (post_history is not None and question.get("source_url")
+                and question.get("channel")):
+            try:
+                prior = post_history.check(question["channel"], question["source_url"])
+            except Exception as exc:
+                errors.append({"question_id": question.get("id"),
+                               "provider": "post_history",
+                               "code": type(exc).__name__})
+                prior = None
+            if prior:
+                posted.append({"id": question.get("id") or question.get("source_url"),
+                               "source_url": question["source_url"], **prior})
+                continue
+        active_questions.append(question)
     # Bridge only to an already-existing FruitStack product/inventory capability.
     # The host can batch queries; MelonMe does not build a second crawler.
     if inventory_lookup is not None and context.get("use_inventory_bridge", True):
@@ -262,7 +284,7 @@ def find(context: dict, awin: Awin | None = None,
                 "market": _market(q.get("market") or context.get("market")),
                 "language": q.get("language") or context.get("language"),
                 "search_terms": q.get("search_terms") or [],
-            } for q in questions[:100] if isinstance(q, dict)],
+            } for q in active_questions[:100] if isinstance(q, dict)],
             "limit_per_question": 10,
         }
         try:
@@ -293,7 +315,7 @@ def find(context: dict, awin: Awin | None = None,
                           " ".join(str(x) for x in (q.get("search_terms")
                                                     if isinstance(q.get("search_terms"), list)
                                                     else [])[:20])
-                          for q in questions[:100] if isinstance(q, dict)
+                          for q in active_questions[:100] if isinstance(q, dict)
                           and _market(q.get("market") or context.get("market")) == feed_market]
             if not feed_query:
                 continue
@@ -318,7 +340,7 @@ def find(context: dict, awin: Awin | None = None,
         client = awin if awin is not None else Awin.from_env()
         for promo_market in sorted({
             _market(q.get("market") or context.get("market"))
-            for q in questions[:100] if isinstance(q, dict)
+            for q in active_questions[:100] if isinstance(q, dict)
         } - {""})[:3]:
             if client is None:
                 errors.append({"provider": "awin_promotions",
@@ -334,7 +356,7 @@ def find(context: dict, awin: Awin | None = None,
             except (PartnerError, ValueError) as err:
                 errors.append({"provider": "awin_promotions",
                                "market": promo_market, "code": str(err)})
-    for q in questions[:500]:
+    for q in active_questions[:500]:
         if not isinstance(q, dict):
             continue
         qid = str(q.get("id") or q.get("source_url") or "").strip()
@@ -391,7 +413,7 @@ def find(context: dict, awin: Awin | None = None,
             except PartnerError as exc:
                 errors.append({"provider": "awin", "market": market, "code": str(exc)})
     results.sort(key=lambda r: (r["decision"] != "READY", -len(r["offers"])))
-    return {"opportunities": results[:limit], "errors": errors,
+    return {"opportunities": results[:limit], "posted": posted, "errors": errors,
             "inventory_checks": inventory_checks, "provider_checks": provider_checks,
             "checked": len(questions[:500])}
 
@@ -557,10 +579,16 @@ def execute(opportunity: dict, awin: Awin | None = None,
         (oid + "\n" + str(opportunity.get("source_url") or "") + "\n" + answer).encode("utf-8")
     ).hexdigest()
     # Stable per target; editing prose must not create a new post on retries.
-    publication_key = hashlib.sha256(
-        (oid + "|" + str(opportunity.get("channel") or "") + "|" +
-         str(opportunity.get("source_url") or "")).encode("utf-8")
-    ).hexdigest()
+    from melonme.post_history import target_key
+    try:
+        publication_key = target_key(
+            str(opportunity.get("channel") or ""),
+            str(opportunity.get("source_url") or ""))
+    except ValueError:
+        publication_key = hashlib.sha256(
+            (oid + "|" + str(opportunity.get("channel") or "") + "|" +
+             str(opportunity.get("source_url") or "")).encode("utf-8")
+        ).hexdigest()
     base = {
         "id": oid, "draft": answer, "tracked": tracked,
         "offer_url": link, "fingerprint": fingerprint,
