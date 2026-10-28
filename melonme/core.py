@@ -482,9 +482,15 @@ def execute(opportunity: dict, awin: Awin | None = None,
     resolved: list[dict] = []
     warnings: list[str] = []
     for offer in eligible[:5]:
+        # Fast path: stop external link requests as soon as a sufficiently
+        # relevant tracked offer succeeds; extra API calls waste time/quota.
+        if resolved and relevance(offer) < 0.95 * peak:
+            break
         link, tracked, clickref, local_warnings = _resolve_offer(offer, oid, market, awin)
         warnings.extend(local_warnings)
         resolved.append({"offer": offer, "link": link, "tracked": tracked, "clickref": clickref})
+        if tracked and relevance(offer) >= 0.95 * peak:
+            break
     # A tracked offer may win only if suitability is nearly identical.
     selected = next(
         (x for x in resolved if x["tracked"] and
