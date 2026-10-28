@@ -339,6 +339,19 @@ class AwinFeedTests(unittest.TestCase):
         self.assertEqual(r["opportunities"][0]["decision"], "READY")
         self.assertEqual(r["errors"][0]["provider"], "awin_feed")
 
+    def test_sectioned_feed_merges_product_metadata(self):
+        raw = {"meta": {"advertiser_id": 7},
+               "product_basic": {"id": "sku", "title": "Sport Kopfhörer"},
+               "product_details": {"link": "https://shop.example/p",
+                                   "price": "39.00 EUR",
+                                   "availability": "in_stock"}}
+        with patch("melonme.awin_inventory._no_redirect_open",
+                   return_value=io.BytesIO((json.dumps(raw) + "\n").encode())):
+            r = awin_inventory.scan_enhanced_feed(
+                "1234", "secret", 7, "de_AT", "AT", "Sport Kopfhörer")
+        self.assertEqual(r["offers"][0]["price"], "39.00")
+        self.assertTrue(r["offers"][0]["available"])
+
     def test_documented_http_product_link_retained(self):
         raw = {"id": "a1", "title": "Sport Kopfhörer", "link": "http://shop.example/item",
                "availability": "in_stock", "price": "22.00 EUR"}
