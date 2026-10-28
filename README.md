@@ -1,12 +1,22 @@
 # MelonMe — Guerrilla Monetization MCP
 
 **Konzept v0.3.1 · 28. Oktober 2026**  
-**Status:** Zielkonzept, noch keine Implementierung  
+**Status:** Konzept v0.3.1 + erster ausführbarer Python-MCP v0.1.0; Live-Betrieb nicht verifiziert  
 **Systemrolle:** schlankes, seitlich angedocktes Geschäftsmodell des bestehenden FruitStacks
 
 > **MelonMe findet aktuelle Kaufabsichten, nutzt passende und tatsächlich erreichbare Angebote, antwortet dort, wo eine kommerzielle Beteiligung erlaubt ist, und lernt aus realem wirtschaftlichem Erfolg. Schnell, international, mit geringsten Betriebskosten.**
 >
 > **FruitStack denkt und organisiert. MelonMe führt dieses eine Geschäft aus.**
+
+## Tatsächlich implementierter Stand (28.10.2026)
+
+Das Repository enthält jetzt einen **installierbaren MCP-v2-stdio-Server** mit drei ausführbaren Funktionen: `find`, `execute`, `learn`. Der Code steht in [melonme/core.py](melonme/core.py) und [melonme/server.py](melonme/server.py). Die [Kurzanleitung](docs/QUICKSTART.md) dokumentiert Installation und Eingaben, die [Offline-Tests](tests/test_core.py) prüfen Kern- und Fehlerpfade.
+
+**Implementiert:** Markt-/Sprachtrennung und Matching vom FruitStack gelieferter Fragen und Angebote, echte optionale Awin-Publisher-Programmabfrage, Awin-Linkerzeugung und Transaktionslesung bei vorhandenen Credentials, Entwurfserstellung, optionaler HTTPS-Bridge zu einem bestehenden Publisher, externe Antwort-ID als Veröffentlichungsbeleg sowie Provision/Kosten/Auszahlungsaggregation mit getrennten Währungen. Ein Fehler bei einem Partner stoppt andere Gelegenheiten nicht.
+
+**Nicht nachgewiesen:** bestehende Amazon- oder Awin-Zugangsdaten, tatsächliche FruitStack-Live-Verbindung, funktionierende Beiträge an realen Foren, reale Umsätze. Ein globales Crawling, Amazon-Creators-API-Adapter und adaptive Optimierung sind noch **nicht** implementiert. Die Unit-Tests verwenden bewusst Offline-Doubles statt vorgetäuschter Live-Ergebnisse.
+
+Dieses Konzept beschreibt die gewünschte Weiterentwicklung; nicht alle nachfolgenden Fähigkeiten sind schon programmierte Funktionen.
 
 ## 1. Auftrag: ein Guerilla-Geschäftsmodell, keine Affiliate-Plattform
 
@@ -120,4 +130,4 @@ MelonMe ist **wirtschaftlich erfolgreich**, wenn aus erlaubten realen Empfehlung
 
 ---
 
-**Abgrenzung des Stands:** Dieses Dokument ersetzt den überladenen Entwurf v0.2 als kompaktere Zielvorgabe. Es ist eine Konzeptrevision, **kein** implementierter MCP, keine belegte Partnerfreigabe und keine Zusage realer Einnahmen. Die vorherige Version bleibt über Git-Historie nachvollziehbar.
+**Abgrenzung des Stands:** v0.3.1 ist das Zielbild. Ergänzt wurde ein erster ausführbarer MCP-Kern, noch ohne Live-Partnernachweis, Host-Integration oder Zusage realer Einnahmen. Frühere Konzepte bleiben über Git-Historie nachvollziehbar.
