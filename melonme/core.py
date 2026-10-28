@@ -108,56 +108,69 @@ class Awin:
             raise PartnerError("LINK_NOT_RETURNED")
         return link
 
-    def promotions(self, market: str) -> list[dict]:
-        """Read actual joined, active Awin offers for one specific region."""
+    def promotions(self, market: str, *, max_pages: int = 2) -> list[dict]:
+        """Read joined Awin offers without silently treating page one as exhaustive."""
         if not re.fullmatch(r"[A-Z]{2}", market):
             raise PartnerError("MARKET_REQUIRED")
-        payload = {
-            "filters": {"membership": "joined", "regionCodes": [market],
-                        "status": "active", "type": "all"},
-            "pagination": {"page": 1, "pageSize": 100},
-        }
-        data = _json_request(
-            "https://api.awin.com/publisher/" + self.publisher_id + "/promotions",
-            self.token, payload)
-        if isinstance(data, list):
-            raw = data
-        elif isinstance(data, dict):
-            raw = next((data[key] for key in ("promotions", "items", "data", "results")
-                        if isinstance(data.get(key), list)), None)
-        else:
-            raw = None
-        if raw is None:
-            raise PartnerError("PROMOTIONS_RESPONSE_UNRECOGNIZED")
-        offers = []
-        for item in raw:
-            if not isinstance(item, dict):
-                continue
-            advertiser = item.get("advertiser") or {}
-            regions = item.get("regions") or {}
-            if not isinstance(advertiser, dict) or advertiser.get("joined") is not True:
-                continue
-            if isinstance(regions, dict) and not regions.get("all"):
-                listed = regions.get("list") or []
-                if not any(isinstance(v, dict) and v.get("countryCode") == market
-                           for v in listed):
+        page_size = 100
+        max_pages = min(max(int(max_pages), 1), 5)
+        offers: dict[str, dict] = {}
+        self.last_promotions_pages = 0
+        self.last_promotions_partial = False
+        for page in range(1, max_pages + 1):
+            payload = {
+                "filters": {"membership": "joined", "regionCodes": [market],
+                            "status": "active", "type": "all"},
+                "pagination": {"page": page, "pageSize": page_size},
+            }
+            data = _json_request(
+                "https://api.awin.com/publisher/" + self.publisher_id + "/promotions",
+                self.token, payload,
+            )
+            if isinstance(data, list):
+                raw = data
+            elif isinstance(data, dict):
+                raw = next((data[key] for key in ("promotions", "items", "data", "results")
+                            if isinstance(data.get(key), list)), None)
+            else:
+                raw = None
+            if raw is None:
+                raise PartnerError("PROMOTIONS_RESPONSE_UNRECOGNIZED")
+            self.last_promotions_pages = page
+            for item in raw:
+                if not isinstance(item, dict):
                     continue
-            url = item.get("url")
-            track = item.get("urlTracking")
-            if not isinstance(url, str) or not _product_url(url):
-                continue
-            offers.append({
-                "provider": "awin_promotion", "advertiser_id": advertiser.get("id"),
-                "product_id": "promotion:" + str(item.get("promotionId")),
-                "title": str(item.get("title") or ""),
-                "description": str(item.get("description") or "")[:500],
-                "url": url, "market": market,
-                "affiliate_url": track if isinstance(track, str) and _https_url(track) else None,
-                "affiliate_verified": isinstance(track, str) and _https_url(track),
-                "available": True, "source": "awin_promotion",
-                "terms": item.get("terms"),
-            })
-        return offers
+                advertiser = item.get("advertiser") or {}
+                regions = item.get("regions") or {}
+                if not isinstance(advertiser, dict) or advertiser.get("joined") is not True:
+                    continue
+                if isinstance(regions, dict) and not regions.get("all"):
+                    listed = regions.get("list") or []
+                    if not any(isinstance(v, dict) and v.get("countryCode") == market
+                               for v in listed):
+                        continue
+                url = item.get("url")
+                track = item.get("urlTracking")
+                if not isinstance(url, str) or not _product_url(url):
+                    continue
+                key = str(advertiser.get("id")) + "|" + str(item.get("promotionId"))
+                offers[key] = {
+                    "provider": "awin_promotion", "advertiser_id": advertiser.get("id"),
+                    "product_id": "promotion:" + str(item.get("promotionId")),
+                    "title": str(item.get("title") or ""),
+                    "description": str(item.get("description") or "")[:500],
+                    "url": url, "market": market,
+                    "affiliate_url": track if isinstance(track, str) and _https_url(track) else None,
+                    "affiliate_verified": isinstance(track, str) and _https_url(track),
+                    "available": True, "source": "awin_promotion",
+                    "terms": item.get("terms"),
+                }
+            if len(raw) < page_size:
+                break
+        else:
+            # The returned data may be useful, but there may be more pages.
+            self.last_promotions_partial = True
+        return list(offers.values())
 
     def transactions(self, start: str, end: str) -> list[dict]:
         # Awin documents a maximum window of 31 days per API request.
@@ -305,7 +318,9 @@ def find(context: dict, awin: Awin | None = None,
                 promotions = client.promotions(promo_market)
                 offers = [*offers, *promotions]
                 provider_checks.append({"provider": "awin_promotions",
-                                        "market": promo_market, "offers": len(promotions)})
+                                        "market": promo_market, "offers": len(promotions),
+                                        "pages": getattr(client, "last_promotions_pages", None),
+                                        "partial": getattr(client, "last_promotions_partial", None)})
             except (PartnerError, ValueError) as err:
                 errors.append({"provider": "awin_promotions",
                                "market": promo_market, "code": str(err)})
