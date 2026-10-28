@@ -154,6 +154,39 @@ class PostHistoryTests(unittest.TestCase):
                          publisher=lambda _: {"external_id": "posted-new"},
                          post_history=self.history)["status"], "PUBLISHED")
 
+    def test_find_returns_previous_post_time_without_searching_products(self):
+        token, _ = self.history.claim(Q["channel"], Q["source_url"])
+        self.history.complete(Q["channel"], Q["source_url"], token, "post-99")
+        def no_inventory(_):
+            raise AssertionError("No product lookup for answered thread")
+        result = core.find({"questions": [Q], "offers": []},
+                           inventory_lookup=no_inventory, post_history=self.history)
+        self.assertEqual(result["opportunities"], [])
+        self.assertEqual(result["posted"][0]["status"], "ALREADY_POSTED")
+        self.assertEqual(result["posted"][0]["external_id"], "post-99")
+        self.assertIn("last_posted_at", result["posted"][0])
+
+    def test_answered_thread_skips_but_other_questions_still_run(self):
+        token, _ = self.history.claim(Q["channel"], Q["source_url"])
+        self.history.complete(Q["channel"], Q["source_url"], token, "post-10")
+        fresh = {**Q, "id": "fresh", "source_url": "https://forum.example/t/other/88"}
+        called = []
+        def inventory(payload):
+            called.extend(payload["questions"])
+            return {"offers": Q["offers"]}
+        result = core.find({"questions": [Q, fresh], "offers": []},
+                           inventory_lookup=inventory, post_history=self.history)
+        self.assertEqual(result["posted"][0]["status"], "ALREADY_POSTED")
+        self.assertEqual([item["id"] for item in result["opportunities"]], ["fresh"])
+        self.assertEqual([item["id"] for item in called], ["fresh"])
+
+    def test_publication_idempotency_follows_thread_not_discovery_id(self):
+        first = core.execute({**Q, "publish": False})
+        second = core.execute({
+            **Q, "id": "other-discovery-id", "publish": False,
+            "source_url": "https://forum.example/t/sport-headphones/42/8?page=10"})
+        self.assertEqual(first["publication_key"], second["publication_key"])
+
 
 if __name__ == "__main__":
     unittest.main()
