@@ -452,13 +452,25 @@ def _resolve_offer(offer: dict, oid: str, market: str, awin: Awin | None) -> tup
 
 
 def execute(opportunity: dict, awin: Awin | None = None,
-            publisher: Any | None = None) -> dict:
+            publisher: Any | None = None, post_history: Any | None = None) -> dict:
     """Generate an answer from actual offers, try local link alternatives.
 
     The publication target and channel are supplied by the host. A
     PUBLISHED claim requires an external receipt; no global stop.
     """
     oid = str(opportunity.get("id") or "")
+    # Check the discussion BEFORE paid partner calls or answer generation.
+    # One thread can have multiple source IDs, but only one recent reply.
+    if (post_history is not None and opportunity.get("publish")
+            and publisher is not None and opportunity.get("channel")
+            and opportunity.get("source_url")):
+        try:
+            previous = post_history.check(opportunity["channel"], opportunity["source_url"])
+            if previous:
+                return {"id": oid, **previous}
+        except (OSError, ValueError) as err:
+            return {"status": "DRAFT_ONLY", "id": oid,
+                    "reason": "POST_HISTORY_UNAVAILABLE", "error_type": type(err).__name__}
     offers = opportunity.get("offers") or []
     if not isinstance(offers, list) or not offers:
         return {"status": "NO_ACTION", "id": oid, "reason": "NO_MATCH"}
@@ -569,14 +581,39 @@ def execute(opportunity: dict, awin: Awin | None = None,
         "source_url": opportunity["source_url"],
         "text": answer, "idempotency_key": publication_key,
     }
+    token = None
+    if post_history is not None:
+        try:
+            token, previous = post_history.claim(opportunity["channel"], opportunity["source_url"])
+            if previous:
+                return {"id": oid, **base, **previous}
+        except Exception as err:
+            return {"status": "DRAFT_ONLY", **base,
+                    "reason": "POST_HISTORY_UNAVAILABLE", "error_type": type(err).__name__}
     try:
         receipt = publisher(payload)
         external_id = receipt.get("external_id") if isinstance(receipt, dict) else None
         if not external_id:
+            if token is not None:
+                post_history.uncertain(opportunity["channel"], opportunity["source_url"], token)
             return {"status": "DRAFT_ONLY", **base, "reason": "EXTERNAL_RECEIPT_MISSING"}
+        if token is not None:
+            try:
+                saved = post_history.complete(
+                    opportunity["channel"], opportunity["source_url"], token, str(external_id))
+            except Exception:
+                saved = False
+            if not saved:
+                warnings.append("POST_RECEIPT_NOT_RECORDED")
         return {"status": "PUBLISHED", **base, "external_id": str(external_id),
-                "external_url": receipt.get("url")}
+                "external_url": receipt.get("url"),
+                "post_history_recorded": token is not None and saved if token is not None else None}
     except Exception as exc:
+        if token is not None:
+            try:
+                post_history.uncertain(opportunity["channel"], opportunity["source_url"], token)
+            except Exception:
+                warnings.append("POST_HISTORY_UNCERTAIN_NOT_RECORDED")
         return {"status": "DRAFT_ONLY", **base,
                 "reason": "PUBLISH_FAILED", "error_type": type(exc).__name__}
 
