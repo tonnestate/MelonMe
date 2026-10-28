@@ -268,9 +268,10 @@ def find(context: dict, awin: Awin | None = None,
             feed_market = _market(spec.get("market"))
             locale = str(spec.get("locale") or "")
             advertiser_id = spec.get("advertiser_id")
-            feed_query = " ".join(str(q.get("query") or q.get("text") or "")
-                                  for q in questions[:100] if isinstance(q, dict)
-                                  and _market(q.get("market") or context.get("market")) == feed_market)
+            feed_query = [str(q.get("query") or q.get("text") or "") + " " +
+                          " ".join(str(x) for x in q.get("search_terms", [])[:20])
+                          for q in questions[:100] if isinstance(q, dict)
+                          and _market(q.get("market") or context.get("market")) == feed_market]
             if not feed_query:
                 continue
             if client is None or not getattr(client, "publisher_id", None):
@@ -321,7 +322,9 @@ def find(context: dict, awin: Awin | None = None,
             errors.append({"question_id": qid, "code": "MARKET_UNKNOWN"})
             continue  # Skip only this question, never others.
         matching = []
-        for offer in offers[:2000]:
+        # Include actual appended partner results; slicing to the first 2000
+        # previously hid Awin inventory whenever the host filled its quota.
+        for offer in offers[:6000]:
             if not isinstance(offer, dict):
                 continue
             score = _offer_match(q, offer, market)
