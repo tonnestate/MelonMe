@@ -15,9 +15,9 @@ jobs:
           python-version: "3.11"
       - name: Compile
         run: python -m compileall -q melonme tests
-      - name: Offline unit tests
-        run: python -m unittest discover -s tests -v
       - name: Install MCP package
         run: python -m pip install -e .
+      - name: Offline unit and MCP protocol tests
+        run: python -m unittest discover -s tests -v
       - name: Smoke import
         run: python -c "from melonme.server import mcp, find, execute, learn; print(type(mcp).__name__)"
