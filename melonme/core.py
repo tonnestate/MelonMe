@@ -58,6 +58,7 @@ class Awin:
             raise PartnerError("INVALID_PUBLISHER_ID")
         if not token:
             raise PartnerError("AWIN_TOKEN_MISSING")
+        self.publisher_id = publisher_id
         self.base = "https://api.awin.com/publishers/" + publisher_id
         self.token = token
 
@@ -155,6 +156,40 @@ def find(context: dict, awin: Awin | None = None) -> dict:
     except (TypeError, ValueError):
         limit = 20
         errors.append({"code": "INVALID_LIMIT_USED_DEFAULT"})
+    # Awin's actual enhanced feed is a product source, not a catalogue of
+    # programmes. Each optional feed is downloaded once, for all questions in
+    # its market; no silent assumption that the full market was searched.
+    offers = offers[:2000]
+    inventory_checks: list[dict] = []
+    feed_requests = context.get("awin_feeds") or []
+    if isinstance(feed_requests, list) and feed_requests:
+        from melonme.awin_inventory import scan_enhanced_feed
+        client = awin if awin is not None else Awin.from_env()
+        for spec in feed_requests[:2]:
+            if not isinstance(spec, dict):
+                continue
+            feed_market = _market(spec.get("market"))
+            locale = str(spec.get("locale") or "")
+            advertiser_id = spec.get("advertiser_id")
+            feed_query = " ".join(str(q.get("query") or q.get("text") or "")
+                                  for q in questions[:100] if isinstance(q, dict)
+                                  and _market(q.get("market") or context.get("market")) == feed_market)
+            if not feed_query:
+                continue
+            if client is None or not getattr(client, "publisher_id", None):
+                errors.append({"provider": "awin_feed", "market": feed_market,
+                               "code": "NOT_CONFIGURED"})
+                continue
+            try:
+                scan = scan_enhanced_feed(
+                    client.publisher_id, client.token, int(advertiser_id), locale,
+                    feed_market, feed_query, max_rows=spec.get("max_rows", 5000),
+                    limit=50)
+                offers = [*offers, *scan["offers"]]
+                inventory_checks.append({k: v for k, v in scan.items() if k != "offers"})
+            except (ValueError, TypeError, PartnerError) as err:
+                errors.append({"provider": "awin_feed", "market": feed_market,
+                               "advertiser_id": advertiser_id, "code": str(err)})
     for q in questions[:500]:
         if not isinstance(q, dict):
             continue
@@ -182,6 +217,10 @@ def find(context: dict, awin: Awin | None = None) -> dict:
                     "affiliate_url": offer.get("affiliate_url"),
                     "advertiser_id": offer.get("advertiser_id"),
                     "verified_facts": offer.get("verified_facts") or [],
+                    "product_id": offer.get("product_id"),
+                    "brand": offer.get("brand"),
+                    "description": offer.get("description"),
+                    "source": offer.get("source"),
                     "relevance": score,
                 })
         matching.sort(key=lambda x: (-x["relevance"], x["title"].casefold()))
@@ -205,7 +244,8 @@ def find(context: dict, awin: Awin | None = None) -> dict:
             except PartnerError as exc:
                 errors.append({"provider": "awin", "market": market, "code": str(exc)})
     results.sort(key=lambda r: (r["decision"] != "READY", -len(r["offers"])))
-    return {"opportunities": results[:limit], "errors": errors, "checked": len(questions[:500])}
+    return {"opportunities": results[:limit], "errors": errors,
+            "inventory_checks": inventory_checks, "checked": len(questions[:500])}
 
 
 def _draft(opportunity: dict, offer: dict, link: str) -> str:
