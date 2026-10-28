@@ -638,5 +638,34 @@ class RevenueAndRecallRegressions(unittest.TestCase):
         self.assertEqual(r["currencies"]["EUR"]["cost"], "0.20")
 
 
+class MalformedInputsDoNotAbortBusiness(unittest.TestCase):
+    def test_invalid_awin_environment_only_disables_awin(self):
+        with patch.dict("os.environ", {"AWIN_PUBLISHER_ID": "not-a-publisher",
+                                       "AWIN_API_TOKEN": "configured"}, clear=True):
+            result = core.find({"questions": [Q], "offers": [O], "probe_awin": True})
+        self.assertEqual(result["opportunities"][0]["decision"], "READY")
+        self.assertIn("NOT_CONFIGURED", [item["code"] for item in result["errors"]])
+
+    def test_malformed_search_terms_are_localized_during_feed_lookup(self):
+        with patch("melonme.awin_inventory.scan_enhanced_feed",
+                   return_value={"offers": [], "scanned_rows": 0, "complete": True}):
+            result = core.find({
+                "questions": [{**Q, "search_terms": None}, {**Q, "id": "q2",
+                                                            "search_terms": "headphones"}],
+                "offers": [O],
+                "awin_feeds": [{"market": "AT", "locale": "de_DE", "advertiser_id": 7}],
+            }, awin=core.Awin("1234", "secret"))
+        self.assertEqual(result["checked"], 2)
+        self.assertTrue(all(x["decision"] == "READY" for x in result["opportunities"]))
+
+    def test_invalid_transaction_date_is_a_local_financial_error(self):
+        r = core.learn({"sync_awin": True, "start": None,
+                        "end": "2026-10-28T11:00:00",
+                        "costs": [{"currency": "EUR", "amount": "1"}]},
+                       awin=core.Awin("1234", "secret"))
+        self.assertEqual(r["currencies"]["EUR"]["cost"], "1")
+        self.assertEqual(r["errors"][0]["code"], "INVALID_DATE_RANGE")
+
+
 if __name__ == "__main__":
     unittest.main()
