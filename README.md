@@ -1,6 +1,6 @@
 # MelonMe — Guerrilla Monetization MCP
 
-**Konzept v0.3 · 28. Oktober 2026**  
+**Konzept v0.3.1 · 28. Oktober 2026**  
 **Status:** Zielkonzept, noch keine Implementierung  
 **Systemrolle:** schlankes, seitlich angedocktes Geschäftsmodell des bestehenden FruitStacks
 
@@ -14,7 +14,7 @@ MelonMe ist ein **Guerilla-Monetarisierungstool**: Es sucht proaktiv nach konkre
 
 Beispiel: In einem geeigneten Forum fragt jemand nach dem besten Staubsauger für Tierhaare oder nach Alternativen zu bestimmten Kopfhörern. MelonMe erkennt die Frage frühzeitig, ermittelt passende Produkte, zeigt auf Wunsch einen kurzen, brauchbaren Vergleich und kann zulässige, korrekt gekennzeichnete Angebote verlinken. Nicht die Anzahl der Beiträge, sondern der **reale Ertrag nach Kosten** entscheidet, was sich wiederholen lohnt.
 
-**„Guerilla“ beschreibt die Arbeitsweise:** schnell, kreativ, opportunistisch, datenbasiert, günstig und auf konkrete Kaufabsichten fokussiert. Es bedeutet **nicht** Spam, Täuschung, Fake-Accounts, erfundene Erfahrungen, unerlaubtes Posten oder Umgehen von Moderation und APIs.
+**„Guerilla“ schließt nach der Geschäftsabsicht ausdrücklich unaufgeforderte kommerzielle Kontaktaufnahme ein — auch das, was Empfänger oder Plattformen als Spam einstufen.** Diese Absicht wird nicht als rein organische Kaufberatung umetikettiert. Das ist ein erheblicher wirtschaftlicher und plattformbezogener Risikofaktor (Sperrung, Entfernung, entfallende Provisionen), den MelonMe bei der Bewertung berücksichtigen muss. Für die technische Ausführung bleiben die Rechte der konkret angesprochenen Plattform und des Partnerprogramms maßgeblich; Täuschung, Fake-Accounts, fingierte Erfahrungen und Umgehung technischer Schutzmaßnahmen sind keine vorgesehenen Funktionen.
 
 MelonMe deckt **genau dieses eine Geschäftsmodell** ab. Es ist keine neue zentrale FruitStack-Architektur, keine allgemeine Commerce-/Affiliate-SaaS, kein Werbemarktplatz, kein Adserver, kein Publisher-Portal und kein Buy-Side-Ads-Tool. Andere Geschäftsmodelle sind eigene Projekte.
 
@@ -86,7 +86,7 @@ Das genaue Schema muss erst gegen die realen FruitStack-Contracts und verfügbar
 
 ## 5. Guerilla-Betrieb: Tempo, Reichweite, Kosten
 
-MelonMe priorisiert **schnell bearbeitbare, hochwertige, erlaubte** Chancen. Es soll nicht jeden Thread beantworten.
+MelonMe priorisiert **schnell bearbeitbare, wirtschaftlich hochwertige Gelegenheiten** und bewertet ausdrücklich auch die Risiken unerwünschter kommerzieller Ansprache. Nicht jede Gelegenheit eignet sich für eine Veröffentlichung; wo diese nicht zulässig ist, bleibt Recherche oder Entwurf möglich.
 
 - **Früh sein, aber nicht aufdringlich:** Aktuelle Fragen und echten Informationsbedarf erkennen; abgeschlossene Diskussionen nicht zwecks Werbung neu beleben.
 - **Mehrsprachig, marktrichtig:** Eine Sprache kann mehrere Länder betreffen; Angebot, Währung, Lieferung, Partnerstatus und Link müssen wirklich passen.
