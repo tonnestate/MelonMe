@@ -35,9 +35,17 @@ def _score(query: str, item: dict) -> float:
 
 
 def _normalize(raw: dict, advertiser_id: int, market: str) -> dict | None:
-    # Enhanced feed may provide Google fields at top level or in product_basic.
-    product = raw.get("product_basic") if isinstance(raw.get("product_basic"), dict) else raw
-    if "error" in raw or not isinstance(product, dict):
+    # Awin's JSONL example contains structured sections (meta/product_basic).
+    # Different advertisers expose fields across sections. Normalize them
+    # without assuming that title, link, price and stock share one subobject.
+    if "error" in raw:
+        return None
+    product = {}
+    for key, section in raw.items():
+        if key.startswith("product_") and isinstance(section, dict):
+            product.update(section)
+    product.update({k: v for k, v in raw.items() if not isinstance(v, dict)})
+    if not product:
         return None
     title = str(product.get("title") or "").strip()
     url = str(product.get("link") or "").strip()
