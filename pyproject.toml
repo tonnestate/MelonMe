@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "melonme"
-version = "0.2.0"
+version = "0.3.0"
 description = "Lean guerrilla monetization MCP sidecar for FruitStack"
 requires-python = ">=3.11"
 dependencies = ["mcp>=2,<3"]
