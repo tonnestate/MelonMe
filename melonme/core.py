@@ -83,7 +83,13 @@ class Awin:
     def from_env(cls) -> Awin | None:
         publisher = os.environ.get("AWIN_PUBLISHER_ID", "")
         token = os.environ.get("AWIN_API_TOKEN", "")
-        return cls(publisher, token) if publisher and token else None
+        if not publisher or not token:
+            return None
+        try:
+            return cls(publisher, token)
+        except PartnerError:
+            # Invalid credentials disable only this provider call, not all work.
+            return None
 
     def programmes(self, market: str) -> list[dict]:
         if not re.fullmatch(r"[A-Z]{2}", market):
@@ -178,7 +184,7 @@ class Awin:
         try:
             fmt = "%Y-%m-%dT%H:%M:%S"
             delta = datetime.strptime(end, fmt) - datetime.strptime(start, fmt)
-        except ValueError:
+        except (ValueError, TypeError):
             raise PartnerError("INVALID_DATE_RANGE") from None
         if not 0 <= delta.total_seconds() <= 31 * 86400:
             raise PartnerError("DATE_RANGE_EXCEEDS_31_DAYS")
@@ -284,7 +290,9 @@ def find(context: dict, awin: Awin | None = None,
             locale = str(spec.get("locale") or "")
             advertiser_id = spec.get("advertiser_id")
             feed_query = [str(q.get("query") or q.get("text") or "") + " " +
-                          " ".join(str(x) for x in q.get("search_terms", [])[:20])
+                          " ".join(str(x) for x in (q.get("search_terms")
+                                                    if isinstance(q.get("search_terms"), list)
+                                                    else [])[:20])
                           for q in questions[:100] if isinstance(q, dict)
                           and _market(q.get("market") or context.get("market")) == feed_market]
             if not feed_query:
