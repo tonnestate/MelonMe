@@ -97,6 +97,18 @@ class PostHistoryTests(unittest.TestCase):
         self.assertIsNotNone(again)
         self.assertIsNone(previous)
 
+    def test_prior_post_time_survives_failed_new_attempt(self):
+        first, _ = self.history.claim(Q["channel"], Q["source_url"])
+        self.history.complete(Q["channel"], Q["source_url"], first, "original")
+        self.now[0] += 181 * 86400
+        retry, _ = self.history.claim(Q["channel"], Q["source_url"])
+        self.history.uncertain(Q["channel"], Q["source_url"], retry)
+        with sqlite3.connect(self.file) as db:
+            row = db.execute("SELECT posted_at,external_id,state FROM posts").fetchone()
+        self.assertIsNotNone(row[0])
+        self.assertEqual(row[1], "original")
+        self.assertEqual(row[2], "UNCERTAIN")
+
     def test_only_minimal_columns_no_full_url_or_message(self):
         token, _ = self.history.claim(Q["channel"], Q["source_url"])
         self.history.complete(Q["channel"], Q["source_url"], token, "external-1")
