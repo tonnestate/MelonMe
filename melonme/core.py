@@ -148,9 +148,13 @@ def find(context: dict, awin: Awin | None = None) -> dict:
     offers = context.get("offers") or []
     if not isinstance(questions, list) or not isinstance(offers, list):
         return {"opportunities": [], "errors": [{"code": "INVALID_INPUT"}]}
-    limit = min(max(int(context.get("limit", 20)), 1), 100)
     results: list[dict] = []
     errors: list[dict] = []
+    try:
+        limit = min(max(int(context.get("limit", 20)), 1), 100)
+    except (TypeError, ValueError):
+        limit = 20
+        errors.append({"code": "INVALID_LIMIT_USED_DEFAULT"})
     for q in questions[:500]:
         if not isinstance(q, dict):
             continue
@@ -291,7 +295,7 @@ def _money(raw: Any) -> Decimal:
             raise InvalidOperation
         return value
     except (ValueError, TypeError, InvalidOperation):
-        return Decimal("0")
+        raise ValueError("INVALID_AMOUNT") from None
 
 
 def learn(results: dict, awin: Awin | None = None) -> dict:
@@ -313,7 +317,8 @@ def learn(results: dict, awin: Awin | None = None) -> dict:
                 errors.append({"provider": "awin", "code": str(exc)})
     totals: dict[str, dict[str, Decimal]] = defaultdict(
         lambda: {"pending": Decimal(0), "approved": Decimal(0),
-                 "declined": Decimal(0), "paid": Decimal(0), "cost": Decimal(0)})
+                 "declined": Decimal(0), "deleted": Decimal(0),
+                 "paid": Decimal(0), "cost": Decimal(0)})
     seen: set[tuple[str, str]] = set()
     count = 0
     for item in transactions:
@@ -333,23 +338,39 @@ def learn(results: dict, awin: Awin | None = None) -> dict:
             currency = str(commission.get("currency") or currency).upper()
             commission = commission.get("amount", 0)
         status = str(item.get("status") or "").lower()
-        if status not in ("pending", "approved", "declined", "paid"):
+        if status not in ("pending", "approved", "declined", "deleted"):
             errors.append({"transaction": tid, "code": "STATUS_UNKNOWN"})
             continue
-        totals[currency][status] += _money(commission)
+        try:
+            amount = _money(commission)
+        except ValueError:
+            errors.append({"transaction": tid, "code": "INVALID_AMOUNT"})
+            continue
+        totals[currency][status] += amount
         count += 1
+    seen_payouts: set[str] = set()
     for item in results.get("payouts") or []:
         if not isinstance(item, dict) or not item.get("payment_id"):
             continue
+        payment_id = str(item["payment_id"])
+        if payment_id in seen_payouts:
+            continue
+        seen_payouts.add(payment_id)
         currency = str(item.get("currency") or "").upper()
         if re.fullmatch(r"[A-Z]{3}", currency):
-            totals[currency]["paid"] += _money(item.get("amount"))
+            try:
+                totals[currency]["paid"] += _money(item.get("amount"))
+            except ValueError:
+                errors.append({"payment_id": payment_id, "code": "INVALID_AMOUNT"})
     for item in results.get("costs") or []:
         if not isinstance(item, dict):
             continue
         currency = str(item.get("currency") or "").upper()
         if re.fullmatch(r"[A-Z]{3}", currency):
-            totals[currency]["cost"] += _money(item.get("amount"))
+            try:
+                totals[currency]["cost"] += _money(item.get("amount"))
+            except ValueError:
+                errors.append({"cost_id": item.get("id"), "code": "INVALID_AMOUNT"})
     report: dict[str, dict[str, str]] = {}
     for currency, amounts in sorted(totals.items()):
         report[currency] = {k: str(v) for k, v in amounts.items()}
