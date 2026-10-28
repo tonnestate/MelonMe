@@ -41,7 +41,14 @@ def _normalize(raw: dict, advertiser_id: int, market: str) -> dict | None:
         return None
     title = str(product.get("title") or "").strip()
     url = str(product.get("link") or "").strip()
-    if not title or not url.startswith("https://"):
+    # Awin's documented non-tracking product link may be HTTP or HTTPS.
+    from urllib.parse import urlparse
+    try:
+        parsed = urlparse(url)
+        valid = parsed.scheme in ("http", "https") and bool(parsed.hostname) and not parsed.username and not parsed.password
+    except ValueError:
+        valid = False
+    if not title or not valid:
         return None
     availability = str(product.get("availability") or "").lower().strip()
     if availability in ("out_of_stock", "out_ouf_stock", "discontinued"):
