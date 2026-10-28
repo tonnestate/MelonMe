@@ -67,7 +67,7 @@ class FindTests(unittest.TestCase):
     def test_live_programme_count_only_reports_observed_value(self):
         r = core.find({"questions": [Q], "offers": [O], "probe_awin": True},
                       awin=FakeAwin())
-        self.assertEqual(r["errors"][0]["joined_programmes"], 1)
+        self.assertEqual(r["provider_checks"][0]["joined_programmes"], 1)
 
     def test_invalid_input_is_local_result(self):
         self.assertEqual(core.find({"questions": "not-list"})["errors"][0]["code"], "INVALID_INPUT")
@@ -337,6 +337,45 @@ class AwinFeedTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "LOCALE_MARKET_MISMATCH"):
             awin_inventory.scan_enhanced_feed(
                 "1234", "secret", 7, "de_DE", "AT", "Sport Kopfhörer")
+
+
+class AwinPromotionTests(unittest.TestCase):
+    def test_actual_joined_promotion_is_found(self):
+        promotion = {
+            "promotionId": 99, "title": "Sport Kopfhörer Rabatt",
+            "advertiser": {"id": 7, "name": "Shop", "joined": True},
+            "url": "https://shop.example/sport",
+            "urlTracking": "https://www.awin1.com/cread.php?id=99",
+            "regions": {"list": [{"countryCode": "AT"}]},
+            "description": "10% auf Sport Kopfhörer",
+        }
+        with patch("melonme.core._json_request", return_value={"promotions": [promotion]}) as request:
+            r = core.find({"questions": [Q], "awin_promotions": True, "offers": []},
+                          awin=core.Awin("1234", "secret"))
+        self.assertEqual(r["opportunities"][0]["decision"], "READY")
+        self.assertTrue(r["opportunities"][0]["offers"][0]["affiliate_verified"])
+        self.assertEqual(r["provider_checks"][0]["offers"], 1)
+        self.assertIn("/publisher/1234/promotions", request.call_args.args[0])
+        self.assertEqual(request.call_args.args[2]["filters"]["membership"], "joined")
+
+    def test_not_joined_promotion_is_not_assumed_monetizable(self):
+        promo = {"promotionId": 1, "title": "Sport Kopfhörer",
+                 "advertiser": {"id": 7, "joined": False},
+                 "url": "https://shop.example/sport",
+                 "urlTracking": "https://www.awin1.com/link",
+                 "regions": {"all": True}}
+        with patch("melonme.core._json_request", return_value={"promotions": [promo]}):
+            r = core.find({"questions": [Q], "awin_promotions": True, "offers": []},
+                          awin=core.Awin("1234", "secret"))
+        self.assertEqual(r["opportunities"][0]["decision"], "NO_MATCH")
+        self.assertEqual(r["provider_checks"][0]["offers"], 0)
+
+    def test_promotion_response_error_does_not_erase_other_offers(self):
+        with patch("melonme.core._json_request", return_value={"unexpected": "shape"}):
+            r = core.find({"questions": [Q], "awin_promotions": True, "offers": [O]},
+                          awin=core.Awin("1234", "secret"))
+        self.assertEqual(r["opportunities"][0]["decision"], "READY")
+        self.assertEqual(r["errors"][0]["code"], "PROMOTIONS_RESPONSE_UNRECOGNIZED")
 
 
 if __name__ == "__main__":
