@@ -482,5 +482,116 @@ class FruitStackBridgeTests(unittest.TestCase):
         self.assertEqual(r["opportunities"][0]["decision"], "READY")
 
 
+class RevenueAndRecallRegressions(unittest.TestCase):
+    def test_awin_feed_handles_unrelated_buyer_questions_separately(self):
+        products = [
+            {"id": "p1", "title": "Sport Kopfhörer",
+             "link": "https://shop.example/sport", "price": "50.00 EUR"},
+            {"id": "p2", "title": "Espresso Kaffeemaschine",
+             "link": "https://shop.example/espresso", "price": "220.00 EUR"},
+        ]
+        raw = ("\n".join(json.dumps(p) for p in products) + "\n").encode()
+        with patch("melonme.awin_inventory._no_redirect_open",
+                   return_value=io.BytesIO(raw)):
+            r = core.find({"questions": [Q, {**Q, "id": "coffee",
+                                             "text": "Espresso Kaffeemaschine"}],
+                           "offers": [],
+                           "awin_feeds": [{"market": "AT", "locale": "de_AT",
+                                           "advertiser_id": 7}]},
+                          awin=core.Awin("1234", "secret"))
+        by_id = {x["id"]: x for x in r["opportunities"]}
+        self.assertEqual(by_id["q-1"]["decision"], "READY")
+        self.assertEqual(by_id["coffee"]["decision"], "READY")
+        self.assertIn("Espresso", by_id["coffee"]["offers"][0]["title"])
+        self.assertEqual(r["inventory_checks"][0]["query_count"], 2)
+
+    def test_new_partner_offers_are_not_hidden_by_full_host_catalog(self):
+        filler = [{**O, "title": "Winter Socken", "url": "https://shop.example/s/" + str(i)}
+                  for i in range(2000)]
+        result = core.find({"questions": [Q], "offers": filler},
+                           inventory_lookup=lambda _: {"offers": [O]})
+        self.assertEqual(result["opportunities"][0]["decision"], "READY")
+        self.assertEqual(result["opportunities"][0]["offers"][0]["title"], O["title"])
+
+    def test_unknown_availability_is_not_a_false_out_of_stock(self):
+        raw = {"id": "x", "title": "Sport Kopfhörer",
+               "link": "https://shop.example/x", "availability": "preorder"}
+        result = awin_inventory._normalize(raw, 7, "AT")
+        self.assertIsNone(result["available"])
+
+    def test_real_out_of_stock_is_excluded(self):
+        raw = {"id": "x", "title": "Sport Kopfhörer",
+               "link": "https://shop.example/x", "availability": "out_of_stock"}
+        self.assertIsNone(awin_inventory._normalize(raw, 7, "AT"))
+
+    def test_awin_promotions_reads_next_page_without_duplicates(self):
+        def promotion(pid):
+            return {"promotionId": pid, "title": "Sport Kopfhörer",
+                    "advertiser": {"id": 7, "joined": True},
+                    "url": "https://shop.example/product",
+                    "urlTracking": "https://awin1.com/affiliate",
+                    "regions": {"all": True}}
+        pages = [[promotion(i) for i in range(100)],
+                 [promotion(100), promotion(1)]]
+        def backend(url, token, payload):
+            return {"promotions": pages[payload["pagination"]["page"] - 1]}
+        with patch("melonme.core._json_request", side_effect=backend) as api:
+            client = core.Awin("1234", "secret")
+            found = client.promotions("AT")
+        self.assertEqual(api.call_count, 2)
+        self.assertEqual(len(found), 101)
+        self.assertFalse(client.last_promotions_partial)
+
+    def test_awin_promotions_reports_incomplete_when_page_cap_reached(self):
+        item = {"promotionId": 5, "title": "Sport Kopfhörer",
+                "advertiser": {"id": 7, "joined": True},
+                "url": "https://shop.example/offer", "regions": {"all": True}}
+        with patch("melonme.core._json_request",
+                   return_value={"promotions": [item] * 100}) as api:
+            client = core.Awin("1234", "secret")
+            client.promotions("AT", max_pages=2)
+        self.assertEqual(api.call_count, 2)
+        self.assertTrue(client.last_promotions_partial)
+
+    def test_clickref_attribution_reconciles_economics_without_guesswork(self):
+        ref = "abcd1234"
+        r = core.learn({
+            "transactions": [
+                {"id": 9, "commissionStatus": "approved",
+                 "commissionAmount": {"amount": "7.00", "currency": "EUR"},
+                 "clickRefs": {"clickRef": ref}},
+                {"id": 10, "commissionStatus": "pending",
+                 "commissionAmount": {"amount": "1.00", "currency": "EUR"}},
+            ],
+            "attribution_map": {ref: "q-1"},
+            "costs": [{"id": "cost-1", "opportunity_id": "q-1",
+                       "currency": "EUR", "amount": "2.00"}],
+        })
+        self.assertEqual(r["by_clickref"][ref]["EUR"]["approved"], "7.00")
+        self.assertEqual(r["by_opportunity"]["q-1"]["EUR"]["approved_less_cost"], "5.00")
+        self.assertEqual(r["unattributed_transactions"], 1)
+        self.assertEqual(r["currencies"]["EUR"]["paid"], "0")
+
+    def test_missing_attribution_map_does_not_guess_opportunity(self):
+        r = core.learn({"transactions": [
+            {"id": 1, "status": "approved", "currency": "EUR",
+             "commission": "3", "clickRef": "my-ref"}
+        ]})
+        self.assertIn("my-ref", r["by_clickref"])
+        self.assertEqual(r["by_opportunity"], {})
+
+    def test_same_payout_id_in_different_currencies_is_not_discarded(self):
+        r = core.learn({"payouts": [
+            {"payment_id": "p1", "currency": "EUR", "amount": "10"},
+            {"payment_id": "p1", "currency": "GBP", "amount": "5"}]})
+        self.assertEqual(r["currencies"]["EUR"]["paid"], "10")
+        self.assertEqual(r["currencies"]["GBP"]["paid"], "5")
+
+    def test_repeated_cost_id_not_counted_twice(self):
+        item = {"id": "model-call-1", "currency": "EUR", "amount": "0.20"}
+        r = core.learn({"costs": [item, item]})
+        self.assertEqual(r["currencies"]["EUR"]["cost"], "0.20")
+
+
 if __name__ == "__main__":
     unittest.main()
