@@ -343,7 +343,7 @@ class AwinFeedTests(unittest.TestCase):
         raw = {"id": "a1", "title": "Sport Kopfhörer", "link": "http://shop.example/item",
                "availability": "in_stock", "price": "22.00 EUR"}
         with patch("melonme.awin_inventory._no_redirect_open",
-                   return_value=io.BytesIO((json.dumps(raw)+"\\n").encode())):
+                   return_value=io.BytesIO((json.dumps(raw)+"\n").encode())):
             r = awin_inventory.scan_enhanced_feed("1234", "secret", 7, "de_AT", "AT", "Sport Kopfhörer")
         self.assertEqual(r["offers"][0]["url"], "http://shop.example/item")
 
