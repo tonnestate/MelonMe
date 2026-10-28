@@ -14,7 +14,7 @@ import re
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlparse
-from urllib.request import Request, urlopen
+from urllib.request import Request, urlopen, build_opener, HTTPRedirectHandler
 
 
 class PartnerError(Exception):
@@ -38,8 +38,14 @@ def _json_request(url: str, token: str, payload: dict | None = None) -> Any:
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         headers["Content-Type"] = "application/json"
     req = Request(url, data=data, headers=headers, method="POST" if data is not None else "GET")
+    # urllib's default redirect handler can copy Authorization onto a redirected
+    # request. Awin tokens and FruitStack bridge tokens must never be forwarded
+    # to a different host under an API-controlled Location header.
+    class NoRedirect(HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
     try:
-        with urlopen(req, timeout=8) as reply:
+        with build_opener(NoRedirect).open(req, timeout=8) as reply:
             raw = reply.read(2_000_001)
             if len(raw) > 2_000_000:
                 raise PartnerError("RESPONSE_TOO_LARGE")
