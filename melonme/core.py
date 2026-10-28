@@ -29,6 +29,17 @@ def _https_url(value: str) -> bool:
         return False
 
 
+def _product_url(value: str) -> bool:
+    # Awin explicitly permits both HTTP and HTTPS merchant destinations.
+    # Only API calls and bearer-token transport must require HTTPS.
+    try:
+        p = urlparse(value)
+        return (p.scheme in ("http", "https") and bool(p.hostname)
+                and not p.username and not p.password and len(value) <= 2000)
+    except ValueError:
+        return False
+
+
 def _json_request(url: str, token: str, payload: dict | None = None) -> Any:
     if not _https_url(url):
         raise PartnerError("INVALID_HTTPS_ENDPOINT")
@@ -84,7 +95,7 @@ class Awin:
         return result
 
     def link(self, advertiser_id: int, destination: str, clickref: str) -> str:
-        if not _https_url(destination):
+        if not _product_url(destination):
             raise PartnerError("INVALID_DESTINATION")
         payload: dict[str, Any] = {
             "advertiserId": int(advertiser_id),
@@ -133,7 +144,7 @@ class Awin:
                     continue
             url = item.get("url")
             track = item.get("urlTracking")
-            if not isinstance(url, str) or not _https_url(url):
+            if not isinstance(url, str) or not _product_url(url):
                 continue
             offers.append({
                 "provider": "awin_promotion", "advertiser_id": advertiser.get("id"),
@@ -186,7 +197,7 @@ def _offer_match(question: dict, offer: dict, market: str) -> float:
     if offer.get("available") is False:
         return 0.0
     title = str(offer.get("title") or "")
-    if not title or not _https_url(str(offer.get("url") or "")):
+    if not title or not _product_url(str(offer.get("url") or "")):
         return 0.0
     extra = question.get("search_terms") or []
     translated = " ".join(str(t) for t in extra[:30]) if isinstance(extra, list) else ""
@@ -430,7 +441,7 @@ def execute(opportunity: dict, awin: Awin | None = None,
         and _market(offer.get("market")) == market
         and offer.get("available") is not False
         and offer.get("title")
-        and _https_url(str(offer.get("url") or ""))
+        and _product_url(str(offer.get("url") or ""))
     ]
     if not eligible:
         reason = "MARKET_MISMATCH" if any(
