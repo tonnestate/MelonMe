@@ -478,6 +478,17 @@ def execute(opportunity: dict, awin: Awin | None = None,
         except (TypeError, ValueError):
             return 0
     eligible.sort(key=lambda x: -relevance(x))
+    authored_text = str(opportunity.get("answer_text") or "").strip()
+    host_product_id = str(opportunity.get("answer_offer_id") or "")
+    if authored_text:
+        # Prefer the product actually discussed by FruitStack before spending
+        # any provider calls. A different, tracked product must not hijack it.
+        mentioned = [o for o in eligible if
+                     (host_product_id and str(o.get("product_id") or "") == host_product_id)
+                     or (not host_product_id and len(str(o.get("title") or "")) >= 5
+                         and str(o["title"]).casefold() in authored_text.casefold())]
+        if mentioned:
+            eligible = mentioned
     peak = relevance(eligible[0])
     resolved: list[dict] = []
     warnings: list[str] = []
