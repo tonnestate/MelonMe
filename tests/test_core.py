@@ -97,7 +97,7 @@ class ExecuteTests(unittest.TestCase):
         self.assertEqual(r["status"], "PUBLISHED")
         self.assertEqual(r["external_id"], "real-post-123")
         self.assertEqual(len(sent), 1)
-        self.assertEqual(sent[0]["idempotency_key"], r["fingerprint"])
+        self.assertEqual(sent[0]["idempotency_key"], r["publication_key"])
 
     def test_publishing_without_receipt_stays_draft(self):
         r = core.execute({**Q, "offers": [O], "publish": True},
@@ -131,6 +131,45 @@ class ExecuteTests(unittest.TestCase):
         offer = {**O, "affiliate_url": "https://aw.example/tracked"}
         r = core.execute({**Q, "offers": [offer], "answer_text": "My tested answer"})
         self.assertFalse(r["tracked"])
+
+    def test_draft_revision_does_not_change_publication_idempotency(self):
+        offer = {**O, "product_id": "sku-1"}
+        a = core.execute({**Q, "offers": [offer],
+                          "answer_text": "Sport Kopfhörer: Variante A",
+                          "answer_offer_id": "sku-1"})
+        b = core.execute({**Q, "offers": [offer],
+                          "answer_text": "Sport Kopfhörer: Variante B",
+                          "answer_offer_id": "sku-1"})
+        self.assertNotEqual(a["fingerprint"], b["fingerprint"])
+        self.assertEqual(a["publication_key"], b["publication_key"])
+
+    def test_host_answer_cannot_attach_unrelated_advertiser_link(self):
+        first = {**O, "title": "Sport Kopfhörer", "relevance": 0.99,
+                 "provider": "awin", "advertiser_id": 8}
+        second = {**O, "title": "Andere Kopfhörer", "relevance": 0.98,
+                  "provider": "awin", "advertiser_id": 7}
+        r = core.execute({**Q, "offers": [first, second],
+                          "answer_text": "Sport Kopfhörer sind geeignet."},
+                         awin=FakeAwin())
+        self.assertIn("Sport Kopfhörer sind geeignet.", r["draft"])
+        self.assertNotIn("Andere Kopfhörer", r["draft"])
+
+    def test_unmatched_product_authorship_rebuilt_from_real_data(self):
+        o = {**O, "affiliate_url": "https://affiliate.example/link",
+             "affiliate_verified": True}
+        r = core.execute({**Q, "offers": [o],
+                          "answer_text": "Produkt XYZ ist garantiert das Beste."})
+        self.assertIn("Sport Kopfhörer", r["draft"])
+        self.assertNotIn("garantiert", r["draft"])
+        self.assertIn("HOST_ANSWER_OFFER_MISMATCH_REBUILT", r["warnings"])
+
+    def test_awin_execute_returns_actual_clickref_for_reconciliation(self):
+        o = {**O, "provider": "awin", "advertiser_id": 7}
+        r = core.execute({**Q, "offers": [o]}, awin=FakeAwin())
+        self.assertTrue(r["tracked"])
+        self.assertEqual(len(r["clickref"]), 24)
+        self.assertRegex(r["clickref"], "^[a-f0-9]{24}$")
+
 
 
 class LearnTests(unittest.TestCase):
