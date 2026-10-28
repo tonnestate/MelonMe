@@ -1,7 +1,7 @@
 # MelonMe — Guerrilla Monetization MCP
 
 **Konzept v0.3.1 · 28. Oktober 2026**  
-**Status:** Konzept v0.3.1 + erster ausführbarer Python-MCP v0.1.0; Live-Betrieb nicht verifiziert  
+**Status:** Konzept v0.3.1 + Python-MCP v0.2.0; Live-Betrieb nicht verifiziert  
 **Systemrolle:** schlankes, seitlich angedocktes Geschäftsmodell des bestehenden FruitStacks
 
 > **MelonMe findet aktuelle Kaufabsichten, nutzt passende und tatsächlich erreichbare Angebote, antwortet dort, wo eine kommerzielle Beteiligung erlaubt ist, und lernt aus realem wirtschaftlichem Erfolg. Schnell, international, mit geringsten Betriebskosten.**
@@ -12,9 +12,9 @@
 
 Das Repository enthält jetzt einen **installierbaren MCP-v2-stdio-Server** mit drei ausführbaren Funktionen: `find`, `execute`, `learn`. Der Code steht in [melonme/core.py](melonme/core.py) und [melonme/server.py](melonme/server.py). Die [Kurzanleitung](docs/QUICKSTART.md) dokumentiert Installation und Eingaben, die [Offline-Tests](tests/test_core.py) prüfen Kern- und Fehlerpfade.
 
-**Implementiert:** Markt-/Sprachtrennung und Matching vom FruitStack gelieferter Fragen und Angebote, echte optionale Awin-Publisher-Programmabfrage, Awin-Linkerzeugung und Transaktionslesung bei vorhandenen Credentials, Entwurfserstellung, optionaler HTTPS-Bridge zu einem bestehenden Publisher, externe Antwort-ID als Veröffentlichungsbeleg sowie Provision/Kosten/Auszahlungsaggregation mit getrennten Währungen. Ein Fehler bei einem Partner stoppt andere Gelegenheiten nicht.
+**Implementiert:** Markt-/Sprachtrennung und sprachübergreifende Suchbegriffe; ein gebündelter HTTPS-Adapter zur **bestehenden** FruitStack-Angebotssuche; echte optionale Awin-Publisher-Programmabfrage, regionale Promotions und begrenzt durchsuchte Enhanced-Produktfeeds; Awin-Linkerzeugung und Transaktionslesung bei vorhandenen Credentials; Entwurfserstellung mit lokalisierter Werbekennzeichnung; Fallback auf vergleichbar geeignete Händlerangebote; optionale HTTPS-Bridge zu einem bestehenden Publisher; externe Antwort-ID als Veröffentlichungsbeleg; sowie provisionssichere Deduplizierung und getrennte Zahlungs-/Kostenaggregation. Ein Fehler bei einem Partner stoppt andere Gelegenheiten nicht.
 
-**Nicht nachgewiesen:** bestehende Amazon- oder Awin-Zugangsdaten, tatsächliche FruitStack-Live-Verbindung, funktionierende Beiträge an realen Foren, reale Umsätze. Ein globales Crawling, Amazon-Creators-API-Adapter und adaptive Optimierung sind noch **nicht** implementiert. Die Unit-Tests verwenden bewusst Offline-Doubles statt vorgetäuschter Live-Ergebnisse.
+**Nicht nachgewiesen:** bestehende Amazon- oder Awin-Zugangsdaten, tatsächliche FruitStack-Live-Verbindung, Beiträge in realen Foren oder Umsätze. Ein globales Crawling, ein Amazon-Creators-API-Adapter und adaptive Optimierung sind noch **nicht** implementiert. Die Unit-Tests verwenden bewusst Offline-Doubles statt vorgetäuschter Live-Ergebnisse.
 
 Dieses Konzept beschreibt die gewünschte Weiterentwicklung; nicht alle nachfolgenden Fähigkeiten sind schon programmierte Funktionen.
 
