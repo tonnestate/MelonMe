@@ -133,8 +133,8 @@ class PostHistory:
                 INSERT INTO posts(target_key,state,posted_at,external_id,attempted_at,token)
                 VALUES (?, 'PENDING', NULL, NULL, ?, ?)
                 ON CONFLICT(target_key) DO UPDATE SET
-                    state='PENDING',posted_at=NULL,external_id=NULL,
-                    attempted_at=excluded.attempted_at,token=excluded.token
+                    state='PENDING',attempted_at=excluded.attempted_at,
+                    token=excluded.token
             """, (key, now, token))
             db.commit()
         return token, None
