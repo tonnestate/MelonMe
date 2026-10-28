@@ -236,6 +236,9 @@ def find(context: dict, awin: Awin | None = None,
     offers = context.get("offers") or []
     if not isinstance(questions, list) or not isinstance(offers, list):
         return {"opportunities": [], "errors": [{"code": "INVALID_INPUT"}]}
+    # Cap only caller-supplied inventory. Fresh partner/bridge results are
+    # appended later and must not disappear behind this cap.
+    offers = offers[:2000]
     results: list[dict] = []
     errors: list[dict] = []
     try:
@@ -269,7 +272,6 @@ def find(context: dict, awin: Awin | None = None,
     # Awin's actual enhanced feed is a product source, not a catalogue of
     # programmes. Each optional feed is downloaded once, for all questions in
     # its market; no silent assumption that the full market was searched.
-    offers = offers[:2000]
     inventory_checks: list[dict] = []
     feed_requests = context.get("awin_feeds") or []
     if isinstance(feed_requests, list) and feed_requests:
