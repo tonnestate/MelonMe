@@ -56,7 +56,13 @@ def find(context: dict[str, Any]) -> dict:
     One failure does not stop other questions.
     """
     lookup = _inventory_bridge if os.environ.get("MELONME_INVENTORY_BRIDGE_URL") else None
-    return core.find(context, inventory_lookup=lookup)
+    try:
+        history = _post_history()
+    except (ValueError, OSError) as exc:
+        return {"opportunities": [], "posted": [], "errors": [
+            {"provider": "post_history", "code": "POST_HISTORY_UNAVAILABLE",
+             "error_type": type(exc).__name__}]}
+    return core.find(context, inventory_lookup=lookup, post_history=history)
 
 
 @mcp.tool()
