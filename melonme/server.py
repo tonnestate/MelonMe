@@ -59,9 +59,12 @@ def find(context: dict[str, Any]) -> dict:
     try:
         history = _post_history()
     except (ValueError, OSError) as exc:
-        return {"opportunities": [], "posted": [], "errors": [
-            {"provider": "post_history", "code": "POST_HISTORY_UNAVAILABLE",
-             "error_type": type(exc).__name__}]}
+        # A broken local history must not disable discovery worldwide.
+        result = core.find(context, inventory_lookup=lookup)
+        result.setdefault("errors", []).append({
+            "provider": "post_history", "code": "POST_HISTORY_UNAVAILABLE",
+            "error_type": type(exc).__name__})
+        return result
     return core.find(context, inventory_lookup=lookup, post_history=history)
 
 
