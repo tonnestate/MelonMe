@@ -59,7 +59,7 @@ def _normalize(raw: dict, advertiser_id: int, market: str) -> dict | None:
     if not title or not valid:
         return None
     availability = str(product.get("availability") or "").lower().strip()
-    if availability in ("out_of_stock", "out_ouf_stock", "discontinued"):
+    if availability in ("out_of_stock", "discontinued"):
         return None
     price = str(product.get("sale_price") or product.get("price") or "")
     number = None
@@ -76,7 +76,7 @@ def _normalize(raw: dict, advertiser_id: int, market: str) -> dict | None:
         "brand": str(product.get("brand") or ""),
         "url": url,
         "market": market,
-        "available": availability == "in_stock" if availability else None,
+        "available": True if availability == "in_stock" else None,
         "price": number,
         "currency": currency,
         "source": "awin_enhanced_feed",
@@ -94,7 +94,7 @@ def _no_redirect_open(request: Request, timeout: int = 12):
 
 def scan_enhanced_feed(
     publisher_id: str, token: str, advertiser_id: int, locale: str,
-    market: str, query: str, *, max_rows: int = 5000, limit: int = 10
+    market: str, query: str | list[str], *, max_rows: int = 5000, limit: int = 10
 ) -> dict:
     """Read at most max_rows JSONL products with bounded memory.
 
@@ -121,7 +121,13 @@ def scan_enhanced_feed(
     )
     req = Request(url, headers={"Authorization": "Bearer " + token,
                                 "Accept": "application/x-ndjson"})
-    matches = []
+    # Score each actual buyer request independently. Joining 100 unrelated
+    # questions previously suppressed almost every product match.
+    queries = [str(q).strip() for q in (query if isinstance(query, list) else [query])
+               if str(q).strip()][:100]
+    if not queries:
+        raise ValueError("QUERY_MISSING")
+    per_query: list[list[dict]] = [[] for _ in queries]
     rows = 0
     complete = False
     try:
@@ -145,20 +151,33 @@ def scan_enhanced_feed(
                 item = _normalize(raw, int(advertiser_id), market)
                 if item is None:
                     continue
-                score = _score(query, item)
-                if score > 0:
-                    item["relevance"] = round(score, 4)
-                    matches.append(item)
-                    if len(matches) > limit * 4:
-                        matches.sort(key=lambda x: (-x["relevance"], x["title"]))
-                        matches = matches[:limit]
+                for qidx, candidate_query in enumerate(queries):
+                    score = _score(candidate_query, item)
+                    if score <= 0:
+                        continue
+                    candidate = {**item, "relevance": round(score, 4)}
+                    bucket = per_query[qidx]
+                    bucket.append(candidate)
+                    if len(bucket) > limit * 2:
+                        bucket.sort(key=lambda x: (-x["relevance"], x["title"]))
+                        del bucket[limit:]
     except HTTPError as err:
         raise ValueError("FEED_HTTP_" + str(err.code)) from None
     except (URLError, TimeoutError) as err:
         raise ValueError("FEED_" + type(err).__name__) from None
-    matches.sort(key=lambda x: (-x["relevance"], x["title"]))
+    # Keep up to 'limit' matches per buyer query, deduplicating products.
+    # The same feed is downloaded only once, regardless of question count.
+    matches: dict[tuple[str, str], dict] = {}
+    for bucket in per_query:
+        for item in sorted(bucket, key=lambda x: (-x["relevance"], x["title"]))[:limit]:
+            key = (str(item.get("advertiser_id")), str(item.get("product_id") or item["url"]))
+            old = matches.get(key)
+            if old is None or item["relevance"] > old["relevance"]:
+                matches[key] = item
+    ordered = sorted(matches.values(), key=lambda x: (-x["relevance"], x["title"]))
     return {
-        "offers": matches[:limit],
+        "offers": ordered[:min(1000, limit * len(queries))],
+        "query_count": len(queries),
         "scanned_rows": rows,
         "complete": complete,
         "partial": not complete,
