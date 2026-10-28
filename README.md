@@ -1,7 +1,7 @@
 # MelonMe — Guerrilla Monetization MCP
 
 **Konzept v0.3.1 · 28. Oktober 2026**  
-**Status:** Konzept v0.3.1 + Python-MCP v0.3.0; Live-Betrieb nicht verifiziert  
+**Status:** Konzept v0.3.1 + Python-MCP v0.4.0; Live-Betrieb nicht verifiziert  
 **Systemrolle:** schlankes, seitlich angedocktes Geschäftsmodell des bestehenden FruitStacks
 
 > **MelonMe findet aktuelle Kaufabsichten, nutzt passende und tatsächlich erreichbare Angebote, antwortet dort, wo eine kommerzielle Beteiligung erlaubt ist, und lernt aus realem wirtschaftlichem Erfolg. Schnell, international, mit geringsten Betriebskosten.**
@@ -27,6 +27,14 @@ Die Ausführung verwendet einen schnellen Link-Builder-Pfad, respektiert das vom
 `learn` kann über `attribution_map` bestätigte Provisionen und zuordenbare Kosten je Opportunity auswerten. Fehlende Referenzen werden nicht erfunden, Auszahlungen weiterhin separat ausgewiesen. Ein MCP-v2-Client testet die drei realen Tool-Aufrufe in der CI.
 
 Siehe [Release v0.3.0](docs/RELEASE_0.3.md), [Ausführungsanleitung](docs/QUICKSTART.md) und [MCP-Protokolltests](tests/test_mcp_protocol.py).
+
+## Update v0.4.0 – nur eine minimale Posting-Historie
+
+`find` und `execute` prüfen nun vor kostspieligen Produkt- und Link-Aufrufen, ob dieselbe Forumsdiskussion bereits beantwortet wurde. Gespeichert werden ausschließlich **Thread-Hash, Zeitpunkt, externe Beitrags-ID und technische Kurzzeitfelder zur Doppelpost-Vermeidung**. Keine Forentexte, Profile, Kontakte oder KIGOR-artigen Quellendaten. Eine einzelne bereits beantwortete Diskussion wird zurückgestellt, andere Gelegenheiten laufen weiter.
+
+Die Veröffentlichungskennung basiert auf der normalisierten Thread-Adresse und bleibt auch bei unterschiedlichen Such-IDs stabil. Das Zeitfenster ist konfigurierbar (Standard 180 Tage). Siehe [Minimal-Historie und Tests](docs/POST_HISTORY.md).
+
+**Automatische Forenregistrierung existiert in MelonMe weiterhin nicht.** Weder Account-Erstellung noch Login sind implementiert. Auch die Publisher-Bridge ist noch nicht als reale FruitStack-Live-Verbindung nachgewiesen.
 
 ## 1. Auftrag: ein Guerilla-Geschäftsmodell, keine Affiliate-Plattform
 
