@@ -27,6 +27,17 @@ def _publisher_bridge(payload: dict) -> dict:
     return receipt
 
 
+def _inventory_bridge(payload: dict) -> dict:
+    endpoint = os.environ.get("MELONME_INVENTORY_BRIDGE_URL", "")
+    token = os.environ.get("MELONME_INVENTORY_BRIDGE_TOKEN", "")
+    if not endpoint or not token:
+        raise core.PartnerError("INVENTORY_BRIDGE_NOT_CONFIGURED")
+    response = core._json_request(endpoint, token, payload)
+    if not isinstance(response, dict):
+        raise core.PartnerError("INVENTORY_RESPONSE_INVALID")
+    return response
+
+
 @mcp.tool()
 def find(context: dict[str, Any]) -> dict:
     """Rank purchase-intent questions against factual, market-specific product offers.
@@ -35,7 +46,8 @@ def find(context: dict[str, Any]) -> dict:
     probe_awin reads joined Awin programmes using credentials from environment.
     One failure does not stop other questions.
     """
-    return core.find(context)
+    lookup = _inventory_bridge if os.environ.get("MELONME_INVENTORY_BRIDGE_URL") else None
+    return core.find(context, inventory_lookup=lookup)
 
 
 @mcp.tool()
