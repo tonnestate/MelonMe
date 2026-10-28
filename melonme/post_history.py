@@ -7,6 +7,7 @@ distributed publishers must also honour MelonMe's idempotency key.
 """
 from __future__ import annotations
 
+from contextlib import closing
 from datetime import datetime, timezone
 import hashlib
 import os
@@ -63,7 +64,7 @@ class PostHistory:
         self.lease_seconds = int(lease_seconds)
         self.clock = clock
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        with self._db() as db:
+        with closing(self._db()) as db:
             db.execute("""
                 CREATE TABLE IF NOT EXISTS posts (
                     target_key TEXT PRIMARY KEY,
@@ -107,7 +108,7 @@ class PostHistory:
 
     def check(self, channel: str, url: str) -> dict | None:
         key = target_key(channel, url)
-        with self._db() as db:
+        with closing(self._db()) as db:
             row = db.execute(
                 "SELECT state,posted_at,external_id,attempted_at FROM posts WHERE target_key=?",
                 (key,),
@@ -118,7 +119,7 @@ class PostHistory:
         key = target_key(channel, url)
         token = uuid.uuid4().hex
         now = self.clock()
-        with self._db() as db:
+        with closing(self._db()) as db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute(
                 "SELECT state,posted_at,external_id,attempted_at FROM posts WHERE target_key=?",
@@ -141,7 +142,7 @@ class PostHistory:
     def complete(self, channel: str, url: str, token: str, external_id: str) -> bool:
         if not external_id:
             return False
-        with self._db() as db:
+        with closing(self._db()) as db:
             result = db.execute("""
                 UPDATE posts SET state='POSTED',posted_at=?,external_id=?,token=NULL
                 WHERE target_key=? AND state='PENDING' AND token=?
@@ -150,7 +151,7 @@ class PostHistory:
             return result.rowcount == 1
 
     def uncertain(self, channel: str, url: str, token: str) -> None:
-        with self._db() as db:
+        with closing(self._db()) as db:
             db.execute("""
                 UPDATE posts SET state='UNCERTAIN',token=NULL
                 WHERE target_key=? AND state='PENDING' AND token=?
