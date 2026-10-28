@@ -400,9 +400,26 @@ class AwinFeedTests(unittest.TestCase):
         self.assertEqual(r["offers"][0]["url"], "http://shop.example/item")
 
     def test_invalid_locale_rejected_without_network(self):
-        with self.assertRaisesRegex(ValueError, "LOCALE_MARKET_MISMATCH"):
+        with self.assertRaisesRegex(ValueError, "INVALID_FEED_LOCALE"):
             awin_inventory.scan_enhanced_feed(
+                "1234", "secret", 7, "de-DE", "AT", "Sport Kopfhörer")
+
+    def test_language_feed_market_independent_of_buyer_country(self):
+        product = {"id": "sku", "title": "Sport Kopfhörer",
+                   "link": "https://shop.example/sport"}
+        with patch("melonme.awin_inventory._no_redirect_open",
+                   return_value=io.BytesIO((json.dumps(product) + "\\n").encode())):
+            r = awin_inventory.scan_enhanced_feed(
                 "1234", "secret", 7, "de_DE", "AT", "Sport Kopfhörer")
+        self.assertEqual(r["offers"][0]["market"], "AT")
+        self.assertEqual(r["offers"][0]["feed_locale"], "de_DE")
+        self.assertEqual(r["offers"][0]["market_origin"], "buyer_request_not_delivery_verified")
+
+    def test_awin_documented_out_ouf_stock_does_not_match(self):
+        self.assertIsNone(awin_inventory._normalize({
+            "id": "sku", "title": "Sport Kopfhörer",
+            "link": "https://shop.example/sport", "availability": "out_ouf_stock"
+        }, 7, "AT"))
 
 
 class AwinPromotionTests(unittest.TestCase):
@@ -480,6 +497,34 @@ class FruitStackBridgeTests(unittest.TestCase):
         offer = {**O, "title": "Samsung S24"}
         r = core.find({"questions": [question], "offers": [offer]})
         self.assertEqual(r["opportunities"][0]["decision"], "READY")
+
+
+    def test_tracked_best_offer_short_circuits_other_partner_calls(self):
+        a = {**O, "product_id": "a", "provider": "awin",
+             "advertiser_id": 1, "relevance": 1.0}
+        b = {**O, "product_id": "b", "provider": "awin",
+             "advertiser_id": 2, "relevance": 0.98}
+        fake = FakeAwin()
+        result = core.execute({**Q, "offers": [a, b]}, awin=fake)
+        self.assertTrue(result["tracked"])
+        self.assertEqual(result["alternatives_checked"], 1)
+        self.assertEqual(len(fake.requests), 1)
+
+    def test_authored_product_selected_before_tracking_link_calls(self):
+        a = {**O, "product_id": "a", "title": "Sport Kopfhörer",
+             "provider": "awin", "advertiser_id": 1, "relevance": 1.0}
+        b = {**O, "product_id": "b", "title": "Bose In-Ear Kopfhörer",
+             "provider": "awin", "advertiser_id": 2, "relevance": 0.98}
+        fake = FakeAwin()
+        result = core.execute({**Q, "offers": [a, b],
+                               "answer_offer_id": "b",
+                               "answer_text": "Bose In-Ear Kopfhörer für das Training."},
+                              awin=fake)
+        self.assertEqual(result["selected_product_id"], "b")
+        self.assertEqual(fake.requests[0][1], 2)
+        self.assertEqual(len(fake.requests), 1)
+        self.assertIn("Bose In-Ear", result["draft"])
+
 
 
 class RevenueAndRecallRegressions(unittest.TestCase):
