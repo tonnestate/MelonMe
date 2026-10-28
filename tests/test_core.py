@@ -1,5 +1,8 @@
 """Offline contract tests: no partner credentials, network access or paid models."""
 import unittest
+import io
+import json
+from melonme import awin_inventory
 from unittest.mock import patch
 
 from melonme import core
@@ -115,7 +118,7 @@ class ExecuteTests(unittest.TestCase):
         r = core.execute({**Q, "offers": [offer]}, awin=fake)
         self.assertTrue(r["tracked"])
         self.assertIn("awin1.com", r["draft"])
-        self.assertEqual(fake.requests[0], ("programmes", "AT"))
+        self.assertEqual(fake.requests[0][0], "link")
 
     def test_failed_awin_call_falls_back_to_factual_draft(self):
         offer = {**O, "provider": "awin", "advertiser_id": 7}
@@ -202,6 +205,138 @@ class AwinClientTests(unittest.TestCase):
         r = core.find({"questions": [Q], "offers": [O], "limit": "broken"})
         self.assertEqual(r["opportunities"][0]["decision"], "READY")
         self.assertEqual(r["errors"][0]["code"], "INVALID_LIMIT_USED_DEFAULT")
+
+
+class RealAwinContractTests(unittest.TestCase):
+    def test_actual_awin_commission_status_is_used(self):
+        r = core.learn({"transactions": [
+            {"id": 1001, "advertiserId": 7, "commissionStatus": "approved",
+             "commissionAmount": {"amount": "12.33", "currency": "EUR"}}
+        ]})
+        self.assertEqual(r["transactions_counted"], 1)
+        self.assertEqual(r["currencies"]["EUR"]["approved"], "12.33")
+        self.assertEqual(r["currencies"]["EUR"]["paid"], "0")
+
+    def test_amended_transaction_replaces_older_pending_snapshot(self):
+        r = core.learn({"transactions": [
+            {"id": 1001, "commissionStatus": "pending",
+             "commissionAmount": {"amount": "10", "currency": "EUR"}},
+            {"id": 1001, "commissionStatus": "approved",
+             "commissionAmount": {"amount": "8", "currency": "EUR"}}
+        ]})
+        self.assertEqual(r["transactions_counted"], 1)
+        self.assertEqual(r["currencies"]["EUR"]["approved"], "8")
+        self.assertEqual(r["currencies"]["EUR"]["pending"], "0")
+
+    def test_changed_transaction_updates_amount_not_twice(self):
+        r = core.learn({"transactions": [
+            {"id": 1001, "commissionStatus": "approved", "validationDate": "2026-10-01",
+             "commissionAmount": {"amount": "5", "currency": "EUR"}},
+            {"id": 1001, "commissionStatus": "approved", "validationDate": "2026-10-09",
+             "commissionAmount": {"amount": "4", "currency": "EUR"}}
+        ]})
+        self.assertEqual(r["transactions_counted"], 1)
+        self.assertEqual(r["currencies"]["EUR"]["approved"], "4")
+
+    def test_host_supplied_affiliate_url_needs_verified_attestation(self):
+        o = {**O, "affiliate_url": "https://affiliate.example/id"}
+        r = core.execute({**Q, "offers": [o]})
+        self.assertFalse(r["tracked"])
+        self.assertEqual(r["offer_url"], O["url"])
+        self.assertIn("AFFILIATE_LINK_UNVERIFIED", r["warnings"])
+
+    def test_verified_affiliate_url_and_language_disclosure(self):
+        o = {**O, "affiliate_url": "https://affiliate.example/id",
+             "affiliate_verified": True}
+        r = core.execute({**Q, "language": "en", "offers": [o]})
+        self.assertTrue(r["tracked"])
+        self.assertIn("Disclosure: affiliate link.", r["draft"])
+
+    def test_awin_success_is_possible_without_programme_list(self):
+        class LinkOnly:
+            def link(self, advertiser_id, url, clickref):
+                return "https://www.awin1.com/cread.php?id=7"
+            def programmes(self, market):
+                raise core.PartnerError("HTTP_403")
+        o = {**O, "advertiser_id": 7, "provider": "awin"}
+        r = core.execute({**Q, "offers": [o]}, awin=LinkOnly())
+        self.assertTrue(r["tracked"])
+
+    def test_other_offer_can_recover_failed_affiliate(self):
+        class Mixed:
+            def link(self, advertiser_id, url, clickref):
+                if advertiser_id == 1:
+                    raise core.PartnerError("HTTP_403")
+                return "https://www.awin1.com/tracked-two"
+        first = {**O, "provider": "awin", "advertiser_id": 1, "relevance": 0.95}
+        second = {**O, "provider": "awin", "advertiser_id": 2, "relevance": 0.94}
+        r = core.execute({**Q, "offers": [first, second]}, awin=Mixed())
+        self.assertTrue(r["tracked"])
+        self.assertEqual(r["alternatives_checked"], 2)
+        self.assertIn("AWIN_HTTP_403", r["warnings"])
+
+    def test_bad_score_does_not_crash_execution(self):
+        r = core.execute({**Q, "offers": [{**O, "relevance": "not-a-number"}]})
+        self.assertEqual(r["status"], "DRAFT_ONLY")
+
+
+class AwinFeedTests(unittest.TestCase):
+    def _response(self):
+        product = {"id": "S-12", "title": "Sport Kopfhörer",
+                   "link": "https://shop.example/sku-12", "price": "29.90 EUR",
+                   "availability": "in_stock", "brand": "Test"}
+        return io.BytesIO((json.dumps(product) + "\n").encode())
+
+    def test_actual_enhanced_feed_product_is_found(self):
+        with patch("melonme.awin_inventory.urlopen", return_value=self._response()) as http:
+            r = awin_inventory.scan_enhanced_feed(
+                "1234", "secret", 7, "de_AT", "AT", "Sport Kopfhörer")
+        self.assertTrue(r["complete"])
+        self.assertEqual(r["offers"][0]["price"], "29.90")
+        self.assertEqual(r["offers"][0]["market"], "AT")
+        self.assertIn("api.awin.com", http.call_args.args[0].full_url)
+        self.assertNotIn("secret", http.call_args.args[0].full_url)
+
+    def test_feed_is_wired_into_find(self):
+        with patch("melonme.awin_inventory.urlopen", return_value=self._response()):
+            r = core.find({"questions": [Q], "offers": [],
+                           "awin_feeds": [{"market": "AT", "locale": "de_AT",
+                                           "advertiser_id": 7}]},
+                          awin=core.Awin("1234", "secret"))
+        self.assertEqual(r["opportunities"][0]["decision"], "READY")
+        self.assertEqual(r["opportunities"][0]["offers"][0]["provider"], "awin")
+        self.assertEqual(r["inventory_checks"][0]["scanned_rows"], 1)
+
+    def test_partial_feed_is_not_claimed_complete(self):
+        with patch("melonme.awin_inventory.urlopen", return_value=self._response()):
+            r = awin_inventory.scan_enhanced_feed(
+                "1234", "secret", 7, "de_AT", "AT", "No match",
+                max_rows=1)
+        self.assertTrue(r["partial"])
+
+    def test_trailer_error_never_masquerades_as_a_complete_feed(self):
+        data = (json.dumps({"id": "1", "title": "Sport Kopfhörer",
+                            "link": "https://shop.example/test"})
+                + "\n" + json.dumps({"error": 500, "message": "incomplete"}) + "\n")
+        with patch("melonme.awin_inventory.urlopen", return_value=io.BytesIO(data.encode())):
+            with self.assertRaisesRegex(ValueError, "AWIN_FEED_ERROR_TRAILER"):
+                awin_inventory.scan_enhanced_feed(
+                    "1234", "secret", 7, "de_AT", "AT", "Sport Kopfhörer")
+
+    def test_feed_failure_is_local_to_source_not_all_questions(self):
+        with patch("melonme.awin_inventory.urlopen",
+                   side_effect=TimeoutError("unreachable")):
+            r = core.find({"questions": [Q], "offers": [O],
+                           "awin_feeds": [{"market": "AT", "locale": "de_AT",
+                                           "advertiser_id": 7}]},
+                          awin=core.Awin("1234", "secret"))
+        self.assertEqual(r["opportunities"][0]["decision"], "READY")
+        self.assertEqual(r["errors"][0]["provider"], "awin_feed")
+
+    def test_invalid_locale_rejected_without_network(self):
+        with self.assertRaisesRegex(ValueError, "LOCALE_MARKET_MISMATCH"):
+            awin_inventory.scan_enhanced_feed(
+                "1234", "secret", 7, "de_DE", "AT", "Sport Kopfhörer")
 
 
 if __name__ == "__main__":
