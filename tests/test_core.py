@@ -125,7 +125,7 @@ class ExecuteTests(unittest.TestCase):
         r = core.execute({**Q, "offers": [offer]}, awin=FakeAwin(fail=True))
         self.assertEqual(r["status"], "DRAFT_ONLY")
         self.assertFalse(r["tracked"])
-        self.assertIn("AWIN_HTTP_403", r["warnings"])
+        self.assertIn("AWIN_HTTP_429", r["warnings"])
 
     def test_external_author_text_without_link_not_marked_tracked(self):
         offer = {**O, "affiliate_url": "https://aw.example/tracked"}
