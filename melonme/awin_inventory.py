@@ -59,7 +59,9 @@ def _normalize(raw: dict, advertiser_id: int, market: str) -> dict | None:
     if not title or not valid:
         return None
     availability = str(product.get("availability") or "").lower().strip()
-    if availability in ("out_of_stock", "discontinued"):
+    # Awin's publisher documentation also uses the historical typo
+    # "out_ouf_stock"; handle it as unavailable instead of recommending it.
+    if availability in ("out_of_stock", "out_ouf_stock", "discontinued"):
         return None
     price = str(product.get("sale_price") or product.get("price") or "")
     number = None
@@ -108,8 +110,6 @@ def scan_enhanced_feed(
         raise ValueError("INVALID_FEED_LOCALE")
     if not re.fullmatch(r"[A-Z]{2}", market or ""):
         raise ValueError("INVALID_FEED_MARKET")
-    if locale[-2:] != market:
-        raise ValueError("LOCALE_MARKET_MISMATCH")
     if not token:
         raise ValueError("TOKEN_MISSING")
     max_rows = min(max(1, int(max_rows)), 100000)
@@ -149,6 +149,9 @@ def scan_enhanced_feed(
                 if "error" in raw:
                     raise ValueError("AWIN_FEED_ERROR_TRAILER")
                 item = _normalize(raw, int(advertiser_id), market)
+                if item is not None:
+                    item["feed_locale"] = locale
+                    item["market_origin"] = "buyer_request_not_delivery_verified"
                 if item is None:
                     continue
                 for qidx, candidate_query in enumerate(queries):
