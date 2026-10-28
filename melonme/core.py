@@ -468,7 +468,7 @@ def execute(opportunity: dict, awin: Awin | None = None,
             previous = post_history.check(opportunity["channel"], opportunity["source_url"])
             if previous:
                 return {"id": oid, **previous}
-        except (OSError, ValueError) as err:
+        except Exception as err:
             return {"status": "DRAFT_ONLY", "id": oid,
                     "reason": "POST_HISTORY_UNAVAILABLE", "error_type": type(err).__name__}
     offers = opportunity.get("offers") or []
