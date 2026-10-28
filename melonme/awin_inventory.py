@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import re
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.request import Request, build_opener, HTTPRedirectHandler
 
 _STOP = frozenset(("which what from about would please suche einen einer einem welche "
                   "the and for with best that this good looking empfehlen nach die der "
@@ -69,6 +69,14 @@ def _normalize(raw: dict, advertiser_id: int, market: str) -> dict | None:
     return result
 
 
+def _no_redirect_open(request: Request, timeout: int = 12):
+    # Bearer credentials must not be forwarded to HTTP redirect targets.
+    class NoRedirect(HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
+    return build_opener(NoRedirect).open(request, timeout=timeout)
+
+
 def scan_enhanced_feed(
     publisher_id: str, token: str, advertiser_id: int, locale: str,
     market: str, query: str, *, max_rows: int = 5000, limit: int = 10
@@ -102,7 +110,7 @@ def scan_enhanced_feed(
     rows = 0
     complete = False
     try:
-        with urlopen(req, timeout=12) as response:
+        with _no_redirect_open(req, timeout=12) as response:
             while rows < max_rows:
                 line = response.readline(131073)
                 if not line:
