@@ -91,6 +91,57 @@ class Awin:
             raise PartnerError("LINK_NOT_RETURNED")
         return link
 
+    def promotions(self, market: str) -> list[dict]:
+        """Read actual joined, active Awin offers for one specific region."""
+        if not re.fullmatch(r"[A-Z]{2}", market):
+            raise PartnerError("MARKET_REQUIRED")
+        payload = {
+            "filters": {"membership": "joined", "regionCodes": [market],
+                        "status": "active", "type": "all"},
+            "pagination": {"page": 1, "pageSize": 100},
+        }
+        data = _json_request(
+            "https://api.awin.com/publisher/" + self.publisher_id + "/promotions",
+            self.token, payload)
+        if isinstance(data, list):
+            raw = data
+        elif isinstance(data, dict):
+            raw = next((data[key] for key in ("promotions", "items", "data", "results")
+                        if isinstance(data.get(key), list)), None)
+        else:
+            raw = None
+        if raw is None:
+            raise PartnerError("PROMOTIONS_RESPONSE_UNRECOGNIZED")
+        offers = []
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            advertiser = item.get("advertiser") or {}
+            regions = item.get("regions") or {}
+            if not isinstance(advertiser, dict) or advertiser.get("joined") is not True:
+                continue
+            if isinstance(regions, dict) and not regions.get("all"):
+                listed = regions.get("list") or []
+                if not any(isinstance(v, dict) and v.get("countryCode") == market
+                           for v in listed):
+                    continue
+            url = item.get("url")
+            track = item.get("urlTracking")
+            if not isinstance(url, str) or not _https_url(url):
+                continue
+            offers.append({
+                "provider": "awin_promotion", "advertiser_id": advertiser.get("id"),
+                "product_id": "promotion:" + str(item.get("promotionId")),
+                "title": str(item.get("title") or ""),
+                "description": str(item.get("description") or "")[:500],
+                "url": url, "market": market,
+                "affiliate_url": track if isinstance(track, str) and _https_url(track) else None,
+                "affiliate_verified": isinstance(track, str) and _https_url(track),
+                "available": True, "source": "awin_promotion",
+                "terms": item.get("terms"),
+            })
+        return offers
+
     def transactions(self, start: str, end: str) -> list[dict]:
         # Awin documents a maximum window of 31 days per API request.
         from datetime import datetime
@@ -190,6 +241,27 @@ def find(context: dict, awin: Awin | None = None) -> dict:
             except (ValueError, TypeError, PartnerError) as err:
                 errors.append({"provider": "awin_feed", "market": feed_market,
                                "advertiser_id": advertiser_id, "code": str(err)})
+    # Awin promotions are actual merchant offers, distinct from catalogue
+    # products. Only an explicit opt-in calls the external offers endpoint.
+    provider_checks: list[dict] = []
+    if context.get("awin_promotions"):
+        client = awin if awin is not None else Awin.from_env()
+        for promo_market in sorted({
+            _market(q.get("market") or context.get("market"))
+            for q in questions[:100] if isinstance(q, dict)
+        } - {""})[:3]:
+            if client is None:
+                errors.append({"provider": "awin_promotions",
+                               "market": promo_market, "code": "NOT_CONFIGURED"})
+                continue
+            try:
+                promotions = client.promotions(promo_market)
+                offers = [*offers, *promotions]
+                provider_checks.append({"provider": "awin_promotions",
+                                        "market": promo_market, "offers": len(promotions)})
+            except (PartnerError, ValueError) as err:
+                errors.append({"provider": "awin_promotions",
+                               "market": promo_market, "code": str(err)})
     for q in questions[:500]:
         if not isinstance(q, dict):
             continue
@@ -240,13 +312,14 @@ def find(context: dict, awin: Awin | None = None) -> dict:
                 continue
             try:
                 programmes = client.programmes(market)
-                errors.append({"provider": "awin", "market": market, "code": "PROBED",
-                               "joined_programmes": len(programmes)})
+                provider_checks.append({"provider": "awin", "market": market, "code": "PROBED",
+                                        "joined_programmes": len(programmes)})
             except PartnerError as exc:
                 errors.append({"provider": "awin", "market": market, "code": str(exc)})
     results.sort(key=lambda r: (r["decision"] != "READY", -len(r["offers"])))
     return {"opportunities": results[:limit], "errors": errors,
-            "inventory_checks": inventory_checks, "checked": len(questions[:500])}
+            "inventory_checks": inventory_checks, "provider_checks": provider_checks,
+            "checked": len(questions[:500])}
 
 
 _AD_LABELS = {
