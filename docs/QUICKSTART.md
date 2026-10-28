@@ -12,6 +12,13 @@ Ein bestehender FruitStack-MCP-Host kann den Prozess starten:
 
     {"mcpServers":{"melonme":{"command":"python","args":["-m","melonme.server"]}}}
 
+
+**v0.3.0:** Siehe [Release-Anleitung](RELEASE_0.3.md) zu mehrseitigen
+Awin-Promotions, getrennt bewerteten Käuferfragen im selben Feed,
+sprachunabhängigen Absatzmärkten und provisionsgenauer Zuordnung
+über `attribution_map` und `by_opportunity`. Die CI testet jetzt auch
+die echten MCP-v2-Aufrufe aller drei Tools.
+
 ## find(context)
 
 Der Host liefert echte Fragen und konkrete Angebote (keine erfundenen Katalogdaten).
@@ -44,7 +51,7 @@ Der Host liefert eine Opportunity mit gültigem Markt und Offer.
 Die Option answer_text enthält eine vom FruitStack formulierte Antwort.
 Ohne diesen Text erstellt MelonMe einen knappen sachlichen Entwurf
 aus verifizierten Produktdaten. Ohne publish=true wird nur DRAFT_ONLY
-ausgegeben. Der Entwurf enthält eine stabile SHA-256-Kennung.
+ausgegeben. Der Entwurf liefert einen Inhalts-`fingerprint` und eine für denselben Zielbeitrag stabile `publication_key`; nur letztere ist der externe `idempotency_key`. Ein erfolgreicher Awin Link Builder liefert zusätzlich `clickref` für die spätere Zuordnung.
 
 Zum Veröffentlichen ist die vorhandene, berechtigte FruitStack-Bridge
 anzuschließen, nicht ein neuer Publikationsagent:
