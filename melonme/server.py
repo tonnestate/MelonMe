@@ -6,11 +6,13 @@ Never logs credentials, never claims an external publication without a receipt.
 from __future__ import annotations
 
 import os
+from functools import lru_cache
 from typing import Any
 
 from mcp.server import MCPServer
 
 from melonme import core
+from melonme.post_history import PostHistory
 
 
 mcp = MCPServer("MelonMe")
@@ -38,6 +40,13 @@ def _inventory_bridge(payload: dict) -> dict:
     return response
 
 
+@lru_cache(maxsize=1)
+def _post_history() -> PostHistory:
+    # Only this tiny local record is retained: thread hash, time, receipt.
+    return PostHistory.from_env()
+
+
+
 @mcp.tool()
 def find(context: dict[str, Any]) -> dict:
     """Rank purchase-intent questions against factual, market-specific product offers.
@@ -57,8 +66,15 @@ def execute(opportunity: dict[str, Any]) -> dict:
     publish=true only uses an operator-configured HTTPS publisher bridge.
     No bridge -> DRAFT_ONLY. PUBLISHED requires external_id from the bridge.
     """
-    publisher = _publisher_bridge if opportunity.get("publish") else None
-    return core.execute(opportunity, publisher=publisher)
+    connected = bool(os.environ.get("MELONME_PUBLISH_BRIDGE_URL") and
+                     os.environ.get("MELONME_PUBLISH_BRIDGE_TOKEN"))
+    publisher = _publisher_bridge if opportunity.get("publish") and connected else None
+    try:
+        history = _post_history() if publisher is not None else None
+    except (ValueError, OSError) as exc:
+        return {"status": "DRAFT_ONLY", "id": opportunity.get("id"),
+                "reason": "POST_HISTORY_UNAVAILABLE", "error_type": type(exc).__name__}
+    return core.execute(opportunity, publisher=publisher, post_history=history)
 
 
 @mcp.tool()
