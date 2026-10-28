@@ -1,7 +1,7 @@
 # MelonMe — Guerrilla Monetization MCP
 
 **Konzept v0.3.1 · 28. Oktober 2026**  
-**Status:** Konzept v0.3.1 + Python-MCP v0.2.0; Live-Betrieb nicht verifiziert  
+**Status:** Konzept v0.3.1 + Python-MCP v0.3.0; Live-Betrieb nicht verifiziert  
 **Systemrolle:** schlankes, seitlich angedocktes Geschäftsmodell des bestehenden FruitStacks
 
 > **MelonMe findet aktuelle Kaufabsichten, nutzt passende und tatsächlich erreichbare Angebote, antwortet dort, wo eine kommerzielle Beteiligung erlaubt ist, und lernt aus realem wirtschaftlichem Erfolg. Schnell, international, mit geringsten Betriebskosten.**
@@ -17,6 +17,16 @@ Das Repository enthält jetzt einen **installierbaren MCP-v2-stdio-Server** mit 
 **Nicht nachgewiesen:** bestehende Amazon- oder Awin-Zugangsdaten, tatsächliche FruitStack-Live-Verbindung, Beiträge in realen Foren oder Umsätze. Ein globales Crawling, ein Amazon-Creators-API-Adapter und adaptive Optimierung sind noch **nicht** implementiert. Die Unit-Tests verwenden bewusst Offline-Doubles statt vorgetäuschter Live-Ergebnisse.
 
 Dieses Konzept beschreibt die gewünschte Weiterentwicklung; nicht alle nachfolgenden Fähigkeiten sind schon programmierte Funktionen.
+
+## Update v0.3.0 — Suchabdeckung, Linkqualität und reale Attribution
+
+Der MCP-Kern kann Kaufanfragen **einzeln gegen denselben Awin-Produktfeed** bewerten, ohne Anbieter durch zusammengefügte Suchbegriffe oder ein frühes Kataloglimit zu übersehen. Promotions erhalten begrenzte Pagination und zeigen Teilabdeckung an. Feed-Sprache und Käufermarkt werden nicht künstlich gleichgesetzt.
+
+Die Ausführung verwendet einen schnellen Link-Builder-Pfad, respektiert das vom FruitStack tatsächlich besprochene Produkt und trennt **inhaltsbezogenen `fingerprint`** von der für Wiederholungsversuche stabilen **`publication_key`**. Die bei Awin tatsächlich erzeugte `clickref` wird zur Finanzzuordnung zurückgegeben.
+
+`learn` kann über `attribution_map` bestätigte Provisionen und zuordenbare Kosten je Opportunity auswerten. Fehlende Referenzen werden nicht erfunden, Auszahlungen weiterhin separat ausgewiesen. Ein MCP-v2-Client testet die drei realen Tool-Aufrufe in der CI.
+
+Siehe [Release v0.3.0](docs/RELEASE_0.3.md), [Ausführungsanleitung](docs/QUICKSTART.md) und [MCP-Protokolltests](tests/test_mcp_protocol.py).
 
 ## 1. Auftrag: ein Guerilla-Geschäftsmodell, keine Affiliate-Plattform
 
