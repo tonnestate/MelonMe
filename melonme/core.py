@@ -330,8 +330,14 @@ def execute(opportunity: dict, awin: Awin | None = None,
         ) else "INVALID_OFFER"
         return {"status": "NO_ACTION", "id": oid, "reason": reason}
     # Preserve independent product relevance before any affiliate optimisation.
-    eligible.sort(key=lambda x: -float(x.get("relevance") or 0))
-    peak = float(eligible[0].get("relevance") or 0)
+    def relevance(offer: dict) -> float:
+        try:
+            value = float(offer.get("relevance") or 0)
+            return value if value == value and value >= 0 and value != float("inf") else 0
+        except (TypeError, ValueError):
+            return 0
+    eligible.sort(key=lambda x: -relevance(x))
+    peak = relevance(eligible[0])
     resolved: list[dict] = []
     warnings: list[str] = []
     for offer in eligible[:5]:
@@ -341,7 +347,7 @@ def execute(opportunity: dict, awin: Awin | None = None,
     # A tracked offer may win only if suitability is nearly identical.
     selected = next(
         (x for x in resolved if x["tracked"] and
-         float(x["offer"].get("relevance") or 0) >= 0.95 * peak),
+         relevance(x["offer"]) >= 0.95 * peak),
         resolved[0],
     )
     offer, link, tracked = selected["offer"], selected["link"], selected["tracked"]
@@ -420,26 +426,41 @@ def learn(results: dict, awin: Awin | None = None) -> dict:
         lambda: {"pending": Decimal(0), "approved": Decimal(0),
                  "declined": Decimal(0), "deleted": Decimal(0),
                  "paid": Decimal(0), "cost": Decimal(0)})
-    seen: set[tuple[str, str]] = set()
-    count = 0
+    # Awin can return the same transaction again after validation or amendment.
+    # Select one current state per provider/id; never sum snapshots as sales.
+    by_id: dict[tuple[str, str], dict] = {}
+    rank = {"pending": 0, "approved": 1, "declined": 1, "deleted": 1}
     for item in transactions:
         if not isinstance(item, dict):
             continue
         tid = str(item.get("id") or item.get("transactionId") or "")
         provider = str(item.get("provider") or "awin")
-        if not tid or (provider, tid) in seen:
+        if not tid:
             continue
-        seen.add((provider, tid))
+        key = (provider, tid)
+        old = by_id.get(key)
+        if old is None:
+            by_id[key] = item
+            continue
+        new_status = str(item.get("commissionStatus") or item.get("status") or "").lower()
+        old_status = str(old.get("commissionStatus") or old.get("status") or "").lower()
+        new_time = str(item.get("amendmentDate") or item.get("validationDate") or "")
+        old_time = str(old.get("amendmentDate") or old.get("validationDate") or "")
+        if new_time and old_time:
+            if new_time >= old_time:
+                by_id[key] = item
+        elif rank.get(new_status, -1) >= rank.get(old_status, -1):
+            by_id[key] = item
+    count = 0
+    for (_, tid), item in by_id.items():
         currency = str(item.get("currency") or item.get("commissionCurrency") or "").upper()
+        commission = item.get("commissionAmount", item.get("commission"))
+        if isinstance(commission, dict):
+            currency = str(commission.get("currency") or currency).upper()
+            commission = commission.get("amount")
         if not re.fullmatch(r"[A-Z]{3}", currency):
             errors.append({"transaction": tid, "code": "CURRENCY_MISSING"})
             continue
-        commission = item.get("commissionAmount", item.get("commission", 0))
-        if isinstance(commission, dict):
-            currency = str(commission.get("currency") or currency).upper()
-            commission = commission.get("amount", 0)
-        # Awin's actual transaction JSON uses commissionStatus, not status.
-        # Support generic host records too; do not infer payout from approval.
         status = str(item.get("commissionStatus") or item.get("status") or "").lower()
         if status not in ("pending", "approved", "declined", "deleted"):
             errors.append({"transaction": tid, "code": "STATUS_UNKNOWN"})
