@@ -378,5 +378,43 @@ class AwinPromotionTests(unittest.TestCase):
         self.assertEqual(r["errors"][0]["code"], "PROMOTIONS_RESPONSE_UNRECOGNIZED")
 
 
+class FruitStackBridgeTests(unittest.TestCase):
+    def test_existing_inventory_bridge_supplies_real_offers(self):
+        called = []
+        def lookup(payload):
+            called.append(payload)
+            return {"offers": [O]}
+        r = core.find({"questions": [Q], "offers": []}, inventory_lookup=lookup)
+        self.assertEqual(r["opportunities"][0]["decision"], "READY")
+        self.assertEqual(len(called), 1)
+        self.assertEqual(called[0]["questions"][0]["market"], "AT")
+
+    def test_host_bridge_failure_is_local_and_keeps_other_offers(self):
+        def failure(payload):
+            raise TimeoutError("unreachable")
+        r = core.find({"questions": [Q], "offers": [O]},
+                      inventory_lookup=failure)
+        self.assertEqual(r["opportunities"][0]["decision"], "READY")
+        self.assertEqual(r["errors"][0]["code"], "TimeoutError")
+
+    def test_wrong_bridge_response_not_reported_as_empty_inventory(self):
+        r = core.find({"questions": [Q], "offers": [O]},
+                      inventory_lookup=lambda _: {"missing": "offers"})
+        self.assertEqual(r["opportunities"][0]["decision"], "READY")
+        self.assertEqual(r["errors"][0]["code"], "INVENTORY_RESPONSE_INVALID")
+
+    def test_localized_query_terms_match_other_language_product(self):
+        question = {**Q, "text": "Need recommendations for earbuds",
+                    "search_terms": ["Sport", "Kopfhörer"]}
+        r = core.find({"questions": [question], "offers": [O]})
+        self.assertEqual(r["opportunities"][0]["decision"], "READY")
+
+    def test_short_product_model_numbers_are_recognized(self):
+        question = {**Q, "text": "S24"}
+        offer = {**O, "title": "Samsung S24"}
+        r = core.find({"questions": [question], "offers": [offer]})
+        self.assertEqual(r["opportunities"][0]["decision"], "READY")
+
+
 if __name__ == "__main__":
     unittest.main()
