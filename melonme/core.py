@@ -611,6 +611,9 @@ def learn(results: dict, awin: Awin | None = None) -> dict:
         elif rank.get(new_status, -1) >= rank.get(old_status, -1):
             by_id[key] = item
     count = 0
+    by_clickref: dict[str, dict[str, dict[str, Decimal]]] = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(Decimal)))
+    unattributed = 0
     for (_, tid), item in by_id.items():
         currency = str(item.get("currency") or item.get("commissionCurrency") or "").upper()
         commission = item.get("commissionAmount", item.get("commission"))
@@ -630,34 +633,78 @@ def learn(results: dict, awin: Awin | None = None) -> dict:
             errors.append({"transaction": tid, "code": "INVALID_AMOUNT"})
             continue
         totals[currency][status] += amount
+        refs = item.get("clickRefs") if isinstance(item.get("clickRefs"), dict) else {}
+        ref = str(item.get("clickRef") or refs.get("clickRef") or "").strip()
+        if ref:
+            by_clickref[ref][currency][status] += amount
+        else:
+            unattributed += 1
         count += 1
-    seen_payouts: set[str] = set()
+    seen_payouts: set[tuple[str, str, str]] = set()
     for item in results.get("payouts") or []:
         if not isinstance(item, dict) or not item.get("payment_id"):
             continue
         payment_id = str(item["payment_id"])
-        if payment_id in seen_payouts:
-            continue
-        seen_payouts.add(payment_id)
         currency = str(item.get("currency") or "").upper()
+        payment_key = (str(item.get("provider") or "awin"), currency, payment_id)
+        if payment_key in seen_payouts:
+            continue
+        seen_payouts.add(payment_key)
         if re.fullmatch(r"[A-Z]{3}", currency):
             try:
                 totals[currency]["paid"] += _money(item.get("amount"))
             except ValueError:
                 errors.append({"payment_id": payment_id, "code": "INVALID_AMOUNT"})
+    seen_costs: set[tuple[str, str]] = set()
+    costs_by_opportunity: dict[str, dict[str, Decimal]] = defaultdict(
+        lambda: defaultdict(Decimal))
     for item in results.get("costs") or []:
         if not isinstance(item, dict):
             continue
         currency = str(item.get("currency") or "").upper()
-        if re.fullmatch(r"[A-Z]{3}", currency):
-            try:
-                totals[currency]["cost"] += _money(item.get("amount"))
-            except ValueError:
-                errors.append({"cost_id": item.get("id"), "code": "INVALID_AMOUNT"})
+        if not re.fullmatch(r"[A-Z]{3}", currency):
+            continue
+        cost_id = str(item.get("id") or "")
+        cost_key = (currency, cost_id)
+        if cost_id and cost_key in seen_costs:
+            continue
+        if cost_id:
+            seen_costs.add(cost_key)
+        try:
+            value = _money(item.get("amount"))
+            totals[currency]["cost"] += value
+            if item.get("opportunity_id"):
+                costs_by_opportunity[str(item["opportunity_id"])][currency] += value
+        except ValueError:
+            errors.append({"cost_id": item.get("id"), "code": "INVALID_AMOUNT"})
     report: dict[str, dict[str, str]] = {}
     for currency, amounts in sorted(totals.items()):
         report[currency] = {k: str(v) for k, v in amounts.items()}
         report[currency]["net_cash"] = str(amounts["paid"] - amounts["cost"])
         report[currency]["approved_less_cost"] = str(amounts["approved"] - amounts["cost"])
+    def decimal_to_text(nested: dict) -> dict:
+        return {outer: {currency: {status: str(amount) for status, amount in values.items()}
+                        for currency, values in amounts.items()}
+                for outer, amounts in nested.items()}
+    refs_map = results.get("attribution_map") or {}
+    attributed: dict[str, dict[str, dict[str, Decimal]]] = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(Decimal)))
+    if isinstance(refs_map, dict):
+        for ref, currencies in by_clickref.items():
+            opportunity_id = refs_map.get(ref)
+            if not opportunity_id:
+                continue
+            for currency, statuses in currencies.items():
+                for status, amount in statuses.items():
+                    attributed[str(opportunity_id)][currency][status] += amount
+    for opportunity_id, currencies in costs_by_opportunity.items():
+        for currency, amount in currencies.items():
+            attributed[opportunity_id][currency]["cost"] += amount
+    for currencies in attributed.values():
+        for amounts in currencies.values():
+            amounts["approved_less_cost"] = amounts["approved"] - amounts["cost"]
     return {"currencies": report, "transactions_counted": count, "errors": errors,
+            "by_clickref": decimal_to_text(by_clickref),
+            "by_opportunity": decimal_to_text(attributed),
+            "unattributed_transactions": unattributed,
             "note": "Awin approved transactions are not cash payouts; payout entries require real payment evidence."}
