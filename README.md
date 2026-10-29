@@ -1,151 +1,155 @@
 # MelonMe — Guerrilla Monetization MCP
 
-**Konzept v0.3.1 · 28. Oktober 2026**  
-**Status:** Konzept v0.3.1 + Python-MCP v0.4.0; Live-Betrieb nicht verifiziert  
-**Systemrolle:** schlankes, seitlich angedocktes Geschäftsmodell des bestehenden FruitStacks
+**Concept v0.3.1 · October 28, 2026**  
+**Status:** Concept v0.3.1 + Python MCP v0.4.0; live operation has not been verified  
+**System role:** A lean, independently scoped business model connected to the existing FruitStack
 
-> **MelonMe findet aktuelle Kaufabsichten, nutzt passende und tatsächlich erreichbare Angebote, antwortet dort, wo eine kommerzielle Beteiligung erlaubt ist, und lernt aus realem wirtschaftlichem Erfolg. Schnell, international, mit geringsten Betriebskosten.**
+> **MelonMe identifies timely purchase intent, uses relevant offers that are genuinely accessible, responds where commercial participation is permitted, and learns from actual economic outcomes. Fast, international, and designed for minimal operating costs.**
 >
-> **FruitStack denkt und organisiert. MelonMe führt dieses eine Geschäft aus.**
+> **FruitStack handles reasoning and orchestration. MelonMe executes this one business model.**
 
-## Tatsächlich implementierter Stand (28.10.2026)
+## Current implementation (October 28, 2026)
 
-Das Repository enthält jetzt einen **installierbaren MCP-v2-stdio-Server** mit drei ausführbaren Funktionen: `find`, `execute`, `learn`. Der Code steht in [melonme/core.py](melonme/core.py) und [melonme/server.py](melonme/server.py). Die [Kurzanleitung](docs/QUICKSTART.md) dokumentiert Installation und Eingaben, die [Offline-Tests](tests/test_core.py) prüfen Kern- und Fehlerpfade.
+The repository contains an **installable MCP v2 stdio server** exposing three executable functions: `find`, `execute`, and `learn`. The implementation is in [melonme/core.py](melonme/core.py) and [melonme/server.py](melonme/server.py). The [quickstart guide](docs/QUICKSTART.md) documents installation and inputs, while the [offline tests](tests/test_core.py) cover core behavior and error paths.
 
-**Implementiert:** Markt-/Sprachtrennung und sprachübergreifende Suchbegriffe; ein gebündelter HTTPS-Adapter zur **bestehenden** FruitStack-Angebotssuche; echte optionale Awin-Publisher-Programmabfrage, regionale Promotions und begrenzt durchsuchte Enhanced-Produktfeeds; Awin-Linkerzeugung und Transaktionslesung bei vorhandenen Credentials; Entwurfserstellung mit lokalisierter Werbekennzeichnung; Fallback auf vergleichbar geeignete Händlerangebote; optionale HTTPS-Bridge zu einem bestehenden Publisher; externe Antwort-ID als Veröffentlichungsbeleg; sowie provisionssichere Deduplizierung und getrennte Zahlungs-/Kostenaggregation. Ein Fehler bei einem Partner stoppt andere Gelegenheiten nicht.
+**Implemented:** Separation of buyer market and language, including cross-language search terms; a bundled HTTPS adapter for the **existing** FruitStack offer search; optional live Awin publisher-program lookups, regional promotions, and bounded searches of enhanced product feeds; Awin link creation and transaction retrieval when credentials are available; localized commercial-disclosure text in generated drafts; fallback to comparably suitable merchant offers; an optional HTTPS bridge to an existing publisher; external reply IDs as publication evidence; and commission-safe deduplication with separate aggregation of payments and costs. A failure with one partner does not halt other opportunities.
 
-**Nicht nachgewiesen:** bestehende Amazon- oder Awin-Zugangsdaten, tatsächliche FruitStack-Live-Verbindung, Beiträge in realen Foren oder Umsätze. Ein globales Crawling, ein Amazon-Creators-API-Adapter und adaptive Optimierung sind noch **nicht** implementiert. Die Unit-Tests verwenden bewusst Offline-Doubles statt vorgetäuschter Live-Ergebnisse.
+**Not demonstrated:** Availability of existing Amazon or Awin credentials, a live FruitStack connection, posts in actual forums, or revenue. Global crawling, an Amazon Creators API adapter, and adaptive optimization are **not yet implemented**. Unit tests deliberately use offline doubles rather than presenting simulated outcomes as live results.
 
-Dieses Konzept beschreibt die gewünschte Weiterentwicklung; nicht alle nachfolgenden Fähigkeiten sind schon programmierte Funktionen.
+This document also describes the intended direction of development. Not every capability discussed below has been implemented.
 
-## Update v0.3.0 — Suchabdeckung, Linkqualität und reale Attribution
+## Update v0.3.0 — Search coverage, link quality, and real attribution
 
-Der MCP-Kern kann Kaufanfragen **einzeln gegen denselben Awin-Produktfeed** bewerten, ohne Anbieter durch zusammengefügte Suchbegriffe oder ein frühes Kataloglimit zu übersehen. Promotions erhalten begrenzte Pagination und zeigen Teilabdeckung an. Feed-Sprache und Käufermarkt werden nicht künstlich gleichgesetzt.
+The MCP core can evaluate purchase requests **individually against the same Awin product feed**, avoiding the loss of merchants caused by combined search terms or prematurely capped catalogs. Promotion queries support bounded pagination and report partial coverage. Feed language is not artificially equated with the buyer's market.
 
-Die Ausführung verwendet einen schnellen Link-Builder-Pfad, respektiert das vom FruitStack tatsächlich besprochene Produkt und trennt **inhaltsbezogenen `fingerprint`** von der für Wiederholungsversuche stabilen **`publication_key`**. Die bei Awin tatsächlich erzeugte `clickref` wird zur Finanzzuordnung zurückgegeben.
+Execution uses a fast link-builder path, respects the product actually discussed by FruitStack, and distinguishes a content-based `fingerprint` from a `publication_key` that remains stable across retries. The `clickref` actually produced by Awin is returned for financial attribution.
 
-`learn` kann über `attribution_map` bestätigte Provisionen und zuordenbare Kosten je Opportunity auswerten. Fehlende Referenzen werden nicht erfunden, Auszahlungen weiterhin separat ausgewiesen. Ein MCP-v2-Client testet die drei realen Tool-Aufrufe in der CI.
+Through `attribution_map`, `learn` can evaluate confirmed commissions and attributable costs per opportunity. Missing references are not invented, and payouts remain separately reported. CI tests the three actual tool calls with an MCP v2 client.
 
-Siehe [Release v0.3.0](docs/RELEASE_0.3.md), [Ausführungsanleitung](docs/QUICKSTART.md) und [MCP-Protokolltests](tests/test_mcp_protocol.py).
+See [Release v0.3.0](docs/RELEASE_0.3.md), the [quickstart guide](docs/QUICKSTART.md), and the [MCP protocol tests](tests/test_mcp_protocol.py).
 
-## Update v0.4.0 – nur eine minimale Posting-Historie
+## Update v0.4.0 — Minimal posting history only
 
-`find` und `execute` prüfen nun vor kostspieligen Produkt- und Link-Aufrufen, ob dieselbe Forumsdiskussion bereits beantwortet wurde. Gespeichert werden ausschließlich **Thread-Hash, Zeitpunkt, externe Beitrags-ID und technische Kurzzeitfelder zur Doppelpost-Vermeidung**. Keine Forentexte, Profile, Kontakte oder KIGOR-artigen Quellendaten. Eine einzelne bereits beantwortete Diskussion wird zurückgestellt, andere Gelegenheiten laufen weiter.
+Before making expensive product and link requests, `find` and `execute` now check whether the same forum discussion has already been answered. The system stores **only the thread hash, timestamp, external post ID, and short-lived technical fields needed to prevent duplicate posts**. It does not store forum text, profiles, contacts, or KIGOR-style source data. A discussion already answered is deferred without blocking other opportunities.
 
-Die Veröffentlichungskennung basiert auf der normalisierten Thread-Adresse und bleibt auch bei unterschiedlichen Such-IDs stabil. Das Zeitfenster ist konfigurierbar (Standard 180 Tage). Siehe [Minimal-Historie und Tests](docs/POST_HISTORY.md).
+The publication identifier is derived from the normalized thread URL and remains stable even if search IDs differ. The lookback window is configurable (180 days by default). See [minimal posting history and tests](docs/POST_HISTORY.md).
 
-**Automatische Forenregistrierung existiert in MelonMe weiterhin nicht.** Weder Account-Erstellung noch Login sind implementiert. Auch die Publisher-Bridge ist noch nicht als reale FruitStack-Live-Verbindung nachgewiesen.
+**Automatic forum registration still does not exist in MelonMe.** Neither account creation nor login is implemented. The publisher bridge has also not been demonstrated as a working live FruitStack connection.
 
-## 1. Auftrag: ein Guerilla-Geschäftsmodell, keine Affiliate-Plattform
+## 1. Mission: A guerrilla business model, not an affiliate platform
 
-MelonMe ist ein **Guerilla-Monetarisierungstool**: Es sucht proaktiv nach konkreten, zeitkritischen Gelegenheiten, die bereits im Netz entstehen, statt eigene Anzeigen zu kaufen, große Kampagnen zu planen oder zunächst Reichweite aufzubauen. Es arbeitet in den Sprachen der jeweiligen Diskussionen und prüft den tatsächlichen Zielmarkt getrennt von der Sprache.
+MelonMe is a **guerrilla monetization tool**. It proactively identifies concrete, time-sensitive opportunities already emerging online, instead of buying advertising, planning large campaigns, or first building an audience. It operates in the language of each discussion and evaluates the actual target market separately from that language.
 
-Beispiel: In einem geeigneten Forum fragt jemand nach dem besten Staubsauger für Tierhaare oder nach Alternativen zu bestimmten Kopfhörern. MelonMe erkennt die Frage frühzeitig, ermittelt passende Produkte, zeigt auf Wunsch einen kurzen, brauchbaren Vergleich und kann zulässige, korrekt gekennzeichnete Angebote verlinken. Nicht die Anzahl der Beiträge, sondern der **reale Ertrag nach Kosten** entscheidet, was sich wiederholen lohnt.
+For example, someone in a suitable forum asks which vacuum cleaner works best for pet hair or requests alternatives to a particular pair of headphones. MelonMe identifies the question early, researches relevant products, provides a concise and useful comparison where appropriate, and can link to eligible, properly disclosed compensated offers. **Actual net earnings**, not post volume, determine which activities are worth repeating.
 
-**„Guerilla“ schließt nach der Geschäftsabsicht ausdrücklich unaufgeforderte kommerzielle Kontaktaufnahme ein — auch das, was Empfänger oder Plattformen als Spam einstufen.** Diese Absicht wird nicht als rein organische Kaufberatung umetikettiert. Das ist ein erheblicher wirtschaftlicher und plattformbezogener Risikofaktor (Sperrung, Entfernung, entfallende Provisionen), den MelonMe bei der Bewertung berücksichtigen muss. Für die technische Ausführung bleiben die Rechte der konkret angesprochenen Plattform und des Partnerprogramms maßgeblich; Täuschung, Fake-Accounts, fingierte Erfahrungen und Umgehung technischer Schutzmaßnahmen sind keine vorgesehenen Funktionen.
+**The intended meaning of "guerrilla" explicitly includes unsolicited commercial outreach, including activity that recipients or platforms may classify as spam.** This intent is not relabeled as purely organic consumer advice. It creates significant business and platform risks (account suspension, removed content, forfeited commissions) that MelonMe must account for. Technical execution remains subject to the rules of the specific platform and partner program. Deception, fake accounts, fabricated personal experiences, and circumvention of technical safeguards are not intended features.
 
-MelonMe deckt **genau dieses eine Geschäftsmodell** ab. Es ist keine neue zentrale FruitStack-Architektur, keine allgemeine Commerce-/Affiliate-SaaS, kein Werbemarktplatz, kein Adserver, kein Publisher-Portal und kein Buy-Side-Ads-Tool. Andere Geschäftsmodelle sind eigene Projekte.
+MelonMe covers **this one business model only**. It is not a replacement for FruitStack's central architecture, a general commerce or affiliate SaaS product, an advertising marketplace, an ad server, a publisher portal, or a buy-side advertising tool. Other business models belong in separate projects.
 
-## 2. Drei Funktionen — die ganze fachliche MCP-Oberfläche
+## 2. Three functions — The complete domain-level MCP interface
 
-### `melonme.find(context)` — Finden und entscheiden
+### `melonme.find(context)` — Identify and decide
 
-- Erkennt **aktuelle** Kaufberatungsfragen aus zulässig zugänglichen Quellen, priorisiert konkrete Kaufabsicht, Gesprächsrelevanz und Zeitfenster.
-- Erkennt Sprache und **Absatz-/Liefermarkt unabhängig voneinander**; nicht aus „Deutsch“ automatisch „Deutschland“ ableiten.
-- Fragt vorhandene, tatsächlich zugängliche Angebotsquellen ab (z. B. bereits angebundene Amazon- oder Awin-Funktionen), ohne Vollständigkeit zu behaupten.
-- Prüft *konkret*, ob ein Produkt für diesen Markt angeboten wird, ob ein gültiges vergütbares Angebot möglich ist und ob der Zielkanal die beabsichtigte kommerzielle Antwort erlaubt.
-- Nutzt günstige Filter und vorhandene Erkenntnisse **vor** teuren Modell- oder Produktrecherchen.
-- Liefert priorisierte, belegte Gelegenheiten oder einen klaren lokalen Grund, weshalb es sich jetzt nicht lohnt.
+- Identify **current** purchase-advice questions from legitimately accessible sources, prioritizing concrete buying intent, relevance to the discussion, and timing.
+- Identify language and **sales/delivery market independently**; German-language content must not automatically imply Germany.
+- Query existing offer sources that are genuinely accessible (for example, already connected Amazon or Awin capabilities), without claiming complete coverage.
+- Verify whether a product is offered in the relevant market, whether a valid commission-bearing offer is possible, and whether the target channel permits the intended commercial response.
+- Apply low-cost filters and existing knowledge **before** expensive model calls or product research.
+- Return prioritized, evidence-backed opportunities or a specific local reason not to proceed at this time.
 
-**Keine neue Partner-Registry als eigener Systemkern.** Vorhandene Zugangsdaten und FruitStack-Funktionen werden verwendet. Ein Teilzugang wird für seine **wirklich funktionierenden Fähigkeiten** genutzt; eine fehlende Teilfunktion sperrt nicht den gesamten Anbieter.
+**No new partner registry as a separate system core.** Use existing credentials and FruitStack capabilities. An integration with partial access should be used for the capabilities that **actually work**; one unavailable capability must not disable the entire provider.
 
-### `melonme.execute(opportunity)` — Nützliche Aktion ausführen
+### `melonme.execute(opportunity)` — Take a useful action
 
-- Prüft nur die für **diese konkrete Aktion** notwendigen Rechte und technischen Voraussetzungen.
-- Erstellt aus verifizierbaren Produktdaten eine ehrliche, kontextbezogene Antwort in der Sprache der Diskussion; drei Produkte sind ein **mögliches Format**, keine Pflicht.
-- Vergleicht Eignung, Nachteile, Kompatibilität, Preis, Verfügbarkeit und gegebenenfalls Folgekosten. Provisionen dürfen fachlich ungeeignete Produkte nicht bevorzugen.
-- Fügt vergütete Links **nur dann** ein, wenn der konkrete Affiliate-Zugang und die beabsichtigte Veröffentlichung diese Nutzung erlauben; kommerzielle Beziehungen werden deutlich gekennzeichnet.
-- Veröffentlicht über eine nachweislich autorisierte Schnittstelle; wo eine Freigabe erforderlich oder die Erlaubnis ungeklärt ist, liefert es stattdessen einen verwendbaren Entwurf, **ohne** die Publikation zu erzwingen.
-- Meldet die echte externe Antwort-ID bzw. einen belegten Ausführungsstatus; ein internes „Tool erfolgreich“ ist kein Beweis der Veröffentlichung.
+- Check only the permissions and technical prerequisites necessary for **this particular action**.
+- Build an honest, context-aware reply in the discussion's language from verifiable product data; a three-product comparison is **one possible format**, not a requirement.
+- Compare suitability, drawbacks, compatibility, pricing, availability, and relevant ongoing costs. Commissions must never outweigh a product's actual suitability.
+- Include compensated links **only when** both the specific affiliate arrangement and the intended publication permit them; clearly disclose commercial relationships.
+- Publish through a demonstrably authorized interface. Where approval is required or permission remains unclear, return a usable draft **without forcing publication**.
+- Return the actual external reply ID or a substantiated execution status. An internal "tool succeeded" message is not proof that anything was published.
 
-**Kein allgemeiner Foren-Stopp.** Ist ein Forum ausdrücklich ungeeignet, wird nur **diese Aktion an diesem Ort** nicht veröffentlicht; andere legale Kanäle bleiben nutzbar. Kein systemweiter Abbruch wegen einer einzelnen Frage, Community oder Händleranbindung.
+**No blanket forum shutdown.** If a specific forum does not permit the action, only **that action in that location** is withheld. Other lawful channels remain available. A single question, community, or merchant integration must not trigger a system-wide shutdown.
 
-### `melonme.learn(results)` — Geld messen, Entscheidungen verbessern
+### `melonme.learn(results)` — Measure money and improve decisions
 
-- Übernimmt zulässig verfügbare Klick-/Transaktionsberichte sowie **bestätigte Provisionen, Stornos, Auszahlungen und tatsächlich verursachte Kosten**.
-- Unterscheidet strikt Prognose, Klick, gemeldeten Kauf, freigegebene Provision und Geldzufluss. Unbekannte Attribution bleibt unbekannt.
-- Erkennt, welche Kombinationen aus Thema, Sprache, Markt, Kanal, Angebot, Zeitpunkt und Antwortformat **nach Kosten** erfolgreich waren.
-- Optimiert zunächst mit einfachen, nachvollziehbaren Regeln; komplexere Lernverfahren werden erst eingesetzt, wenn die Daten das rechtfertigen.
-- **NO_ACTION** und der Abbruch einer teuren, wenig aussichtsreichen Recherche sind positive Entscheidungen, wenn sie Kosten sparen.
+- Ingest legitimately available click and transaction reports, plus **confirmed commissions, reversals, payouts, and actual attributable costs**.
+- Strictly distinguish forecasts, clicks, reported purchases, approved commissions, and received funds. Unknown attribution must remain unknown.
+- Identify which combinations of topic, language, market, channel, offer, timing, and answer format succeed **after costs**.
+- Begin optimization with simple, explainable rules. Introduce more complex learning methods only when the evidence justifies them.
+- Treat **NO_ACTION** and stopping an expensive, low-potential investigation as positive decisions when they save money.
 
-**Wirtschaftliches Ziel:** bestätigte Erlöse minus zurechenbare Kosten; tatsächlich ausgezahltes Geld wird separat ausgewiesen. Hohe Gewinne sind Ziel, keine erfundene Garantie.
+**Economic objective:** Confirmed revenue minus attributable costs; actual cash payouts are reported separately. High profitability is a goal, not a fabricated guarantee.
 
-## 3. AVCOS-Fehler nicht wiederholen
+## 3. Do not repeat the AVCOS mistakes
 
-Bei AVCOS wurden Anbieter teilweise angebunden, aber ihre Funktionen wurden nicht konsequent real ausprobiert oder verwendet. Fehlende Informationen wurden als fehlende Berechtigung oder fehlendes Angebot interpretiert. Eigene pauschale Foren-Stopps und harte Fehlerbehandlung machten aus lokalen Schwierigkeiten globale Blockaden.
+In AVCOS, providers were sometimes connected without consistently testing or using their actual capabilities. Missing information was mistaken for missing permission or missing offers. Blanket forum restrictions and rigid error handling turned isolated difficulties into global blockers.
 
-Daraus folgen für MelonMe **nur fünf operative Regeln**:
+MelonMe therefore follows **five operating rules only**:
 
-1. **Versuchen statt behaupten:** Ein Katalogeintrag ist kein funktionsfähiger Zugang. Ein teilweiser Zugang ist aber auch kein vollständiger Ausfall. Wo möglich: realen lesenden Capability-Call mit vorhandenem Konto ausführen und den tatsächlichen Rückgabewert nutzen.
-2. **Sprache ≠ Land ≠ Marktplatz:** Produkt, Händler, Liefergebiet, Partnerfreigabe und Trackinglink beziehen sich auf einen **konkreten** Markt. Fehlende Daten nicht erraten.
-3. **Lokaler Fehler bleibt lokal:** Kein Treffer bei einem Anbieter → einen anderen vorhandenen, zulässigen Anbieter prüfen. API-Fehler → begrenzt wiederholen oder vorhandene Alternativen nutzen. Verbot in einem Forum → nur dort nicht posten. **Keine unendlichen Retries, kein globaler STOP.**
-4. **Unbekannt ≠ verboten ≠ erlaubt:** Unklare Voraussetzungen werden zielgerichtet geklärt. Solange die Veröffentlichung nicht positiv gedeckt ist, wird **nur dieser öffentliche Schreibvorgang** nicht ausgeführt; Recherche, andere Partner und andere Kanäle laufen weiter. Nachgewiesene Verbote werden respektiert, nicht umgangen.
-5. **Externe Wirkung zählt:** Wirklich veröffentlichter Beitrag, tatsächlich bestätigte Provision und reale Auszahlung sind getrennte Belege. Keine simulierten Einnahmen oder interne Aktivitätsmetriken als Geschäftserfolg.
+1. **Test rather than assume.** A catalog listing is not proof of a working connection, but partial access is not total failure either. Where possible, make a real read-only capability call using an existing account and evaluate the actual response.
+2. **Language ≠ country ≠ marketplace.** Product, merchant, delivery area, affiliate authorization, and tracking link must match a **specific** market. Do not guess missing data.
+3. **Local failure stays local.** No result from one provider → check another existing, permitted provider. API failure → retry within limits or use an available alternative. Posting prohibited in one forum → do not post there. **No endless retries and no global STOP.**
+4. **Unknown ≠ prohibited ≠ permitted.** Investigate unclear prerequisites precisely. Until permission for publication is positively established, withhold **only that public write action**; research, other partners, and other channels continue. Respect demonstrated prohibitions rather than circumventing them.
+5. **External outcomes matter.** An actually published reply, a confirmed commission, and an actual payout require separate evidence. Never treat simulated earnings or internal activity metrics as business success.
 
-**Es gibt keine zusätzliche mehrstufige Partner-Workflow-Engine, kein schweres Zulassungsregister und keinen globalen „alles erst freischalten“-Zwang.** Wenn die konkrete Aktion mit einem vorhandenen Zugang zulässig und ausführbar ist, wird sie nicht durch künstliche Projektmeilensteine blockiert.
+**There is no additional multi-stage partner workflow engine, heavy approval registry, or global requirement to "activate everything first."** An action that is permitted and executable through an existing integration must not be blocked by artificial project milestones.
 
-## 4. Schlanke Integration in FruitStack
+## 4. Lean integration with FruitStack
 
-MelonMe ist eine **fachliche MCP-Schnittstelle**, kein eigener Agentenapparat.
+MelonMe is a **domain-specific MCP interface**, not a separate agent framework.
 
-- **Intelligenz, Recherche, Orchestrierung, Modellauswahl, Credential-Sicherheit, Betriebsüberwachung und langfristiger Arbeitszustand** bleiben bei den dafür vorgesehenen FruitStack-Komponenten, soweit deren reale Schnittstellen geeignet und geprüft sind.
-- MelonMe enthält nur die **drei fachlichen Operationen** und die kleinen Adapter für die konkret benötigten Angebots-, Publikations- und Ergebnisdaten.
-- Keine zweite Modellverwaltung, kein eigener universeller Router, kein zweiter systemweiter Ledger, kein paralleler allgemeiner Scheduler und kein dupliziertes Agentenframework.
-- Der Dienst muss mit wenigen Aufrufen nutzbar sein. Teure Recherche erfolgt nur, wenn die günstige Vorprüfung einen plausiblen Nutzen ergibt.
-- Partnerdaten werden nicht in öffentliche Repositories oder Prompts geschrieben. Vorhandene Secrets bleiben in der zuständigen sicheren Infrastruktur.
-- Externe Schreibaktionen müssen zielgenau autorisiert sein und doppelte Beiträge verhindern. Die Sicherheit ist **schmal und konkret**, nicht ein neu erfundenes Verwaltungsprogramm.
+- **Reasoning, research, orchestration, model selection, credential security, operations monitoring, and long-term work state** remain with the appropriate FruitStack components, insofar as their actual interfaces are suitable and verified.
+- MelonMe provides only the **three domain operations** and small adapters for the offer, publication, and outcome data those operations need.
+- No second model-management system, universal router, system-wide ledger, parallel general-purpose scheduler, or duplicated agent framework.
+- The service must remain usable with few calls. Expensive research is undertaken only when a cheap initial check identifies a plausible benefit.
+- Partner information must not be committed to public repositories or placed in prompts. Existing secrets remain in the appropriate secure infrastructure.
+- External write actions require specific authorization and duplicate-post prevention. Safeguards should be **narrow and concrete**, not an invented administrative program.
 
-**Schnittstellenvertrag (konzeptionell):**
-`find` liefert eine kompakte Opportunity mit Quellen-/Marktkontext, tatsächlich gefundenen Angeboten und bekannten Unsicherheiten.  
-`execute` liefert `PUBLISHED`, `DRAFT_ONLY`, `NO_ACTION` oder einen **lokalen** Fehler mit überprüfbaren Belegen.  
-`learn` liefert einen wirtschaftlichen Ergebnisstand und begründete Verbesserungen der nächsten Auswahl.
+**Interface contract (conceptual):**  
+`find` returns a compact opportunity with source and market context, offers actually discovered, and known uncertainties.  
+`execute` returns `PUBLISHED`, `DRAFT_ONLY`, `NO_ACTION`, or a **local** error with verifiable evidence.  
+`learn` returns an economic outcome summary and justified improvements to future selection.
 
-Das genaue Schema muss erst gegen die realen FruitStack-Contracts und verfügbaren Partnerfunktionen geprüft werden. Diese README behauptet **keine** bereits erfolgte Integration.
+The exact schema still needs verification against real FruitStack contracts and available partner capabilities. This README **does not claim that integration has already happened**.
 
-## 5. Guerilla-Betrieb: Tempo, Reichweite, Kosten
+## 5. Guerrilla operations: Speed, reach, and cost
 
-MelonMe priorisiert **schnell bearbeitbare, wirtschaftlich hochwertige Gelegenheiten** und bewertet ausdrücklich auch die Risiken unerwünschter kommerzieller Ansprache. Nicht jede Gelegenheit eignet sich für eine Veröffentlichung; wo diese nicht zulässig ist, bleibt Recherche oder Entwurf möglich.
+MelonMe prioritizes **opportunities that can be handled quickly and have high economic potential**, while explicitly evaluating the risks of unwanted commercial outreach. Not every opportunity is suitable for publication; where publication is not permitted, research or draft generation may still be possible.
 
-- **Früh sein, aber nicht aufdringlich:** Aktuelle Fragen und echten Informationsbedarf erkennen; abgeschlossene Diskussionen nicht zwecks Werbung neu beleben.
-- **Mehrsprachig, marktrichtig:** Eine Sprache kann mehrere Länder betreffen; Angebot, Währung, Lieferung, Partnerstatus und Link müssen wirklich passen.
-- **Bestehendes zuerst:** Vorhandene Produktquellen, Partnerzugänge, geprüfte Fakten und FruitStack-Infrastruktur wiederverwenden.
-- **Günstiger Erstfilter:** Keine langen Agentenketten für offensichtlich veraltete, wirtschaftlich unattraktive oder nicht nutzbare Gelegenheiten.
-- **Zielgerichtete Alternativen:** Fällt eine konkrete Quelle aus, andere zulässige, real erreichbare Quellen prüfen, statt neue Gesamtarchitektur aufzubauen.
-- **Qualität vor Affiliate-Bias:** Unbelegte Produktbehauptungen weglassen. Wo angebracht: kurze Einordnung statt aufwendiger Tabelle; keine manipulativ positiven Empfehlungen.
-- **Messen statt aufblasen:** Nicht die Zahl der Foren, Publisher-Accounts, Modelle, MCP-Tools oder Posts ist ein Erfolg, sondern ein nachvollziehbarer positiver wirtschaftlicher Beitrag.
+- **Be early, not intrusive.** Identify current questions and genuine information needs; do not revive closed discussions simply to advertise.
+- **Multilingual and market-correct.** One language can span multiple countries; offers, currencies, delivery coverage, partner status, and links must actually fit.
+- **Reuse what exists.** Prefer existing product sources, partner access, verified facts, and FruitStack infrastructure.
+- **Cheap initial filter.** Avoid long agent chains for obviously outdated, uneconomic, or unusable opportunities.
+- **Targeted alternatives.** When one source fails, check other permitted, genuinely accessible sources rather than building a new global architecture.
+- **Quality over affiliate bias.** Omit unsupported product claims. Where appropriate, provide a short explanation rather than an elaborate table; do not manipulate recommendations to make them artificially positive.
+- **Measure instead of inflating activity.** The number of forums, publisher accounts, models, MCP tools, or posts is not success. A traceable positive economic contribution is.
 
-Es gibt keine im Voraus behaupteten Erfolgsquoten, zehnfach höheren Widget-Conversions oder fixen Margen einzelner Produktkategorien. Produktgruppen werden anhand realer Kosten und Provisionen verglichen, nicht per Architekturentscheidung vorgeschrieben.
+There are no predetermined success rates, claims of tenfold higher widget conversions, or fixed margins for particular product categories. Compare categories using real costs and commissions, not architecture-level assumptions.
 
-## 6. Kleine Umsetzungsschritte ohne künstliche Blockaden
+## 6. Small implementation steps without artificial blockers
 
-**Schritt A — Vorhandenes wirklich nutzen.** Tatsächliche FruitStack-Schnittstellen und bereits eingerichtete Amazon-/Awin-/sonstige Partnerzugänge **lesend testen**, Fähigkeiten pro Markt erfassen, reale Antwortwerte prüfen. Unklare, fehlende oder unzulässige Funktionen exakt benennen; parallel verwendbare Funktionen bleiben nutzbar.
+**Step A — Actually use what already exists.** Make **read-only tests** of the real FruitStack interfaces and already configured Amazon, Awin, or other partner integrations. Identify actual capabilities per market and inspect real responses. Specify exactly which capabilities are unclear, missing, or unauthorized, while keeping usable capabilities available in parallel.
 
-**Schritt B — Drei MCP-Funktionen ausführbar machen.** Eine echte Gelegenheit erkennen, ein geeignetes Angebot korrekt recherchieren und einen fachlich geprüften Antwortentwurf erstellen. Mit Testdaten Fehlerfälle, lokale Ausweichpfade, Zeit-/Kostenlimits und `NO_ACTION` prüfen.
+**Step B — Make the three MCP functions executable.** Identify a real opportunity, research an appropriate offer correctly, and prepare a factually sound reply draft. Use test data to exercise failures, local fallbacks, time and cost limits, and `NO_ACTION`.
 
-**Schritt C — Zulässige reale Aktion.** Wo konkrete Veröffentlichung und Affiliate-Nutzung gestattet sind, eine einzelne freigegebene Antwort ausspielen und den externen Zustand belegen. Andernfalls `DRAFT_ONLY` liefern und an anderen zulässigen Chancen weiterarbeiten. Kein globaler Forenstopp.
+**Step C — Perform one permitted real action.** Where publication and affiliate use are specifically authorized, publish one approved reply and verify its external state. Otherwise return `DRAFT_ONLY` and continue with other permitted opportunities. No global forum shutdown.
 
-**Schritt D — Ergebnis messen und besser entscheiden.** Partnerdaten, bestätigte Provisionen, Kosten und tatsächliche Auszahlungen korrekt zuordnen; einfache wirtschaftliche Auswahlregeln mit realen Ergebnissen verbessern. Erst nach einem belegten Erlöskreislauf Aussagen zur Profitabilität treffen.
+**Step D — Measure outcomes and improve decisions.** Correctly attribute partner data, confirmed commissions, costs, and actual payouts. Improve simple economic selection rules using real outcomes. Make profitability claims only after an evidenced revenue cycle.
 
-Schritte sind Entwicklungsarbeit, **keine globalen Freigabeschleusen** für bereits zugelassene Teilfähigkeiten.
+These steps describe development work, **not global approval gates** for capabilities already authorized.
 
-## 7. Definition des Erfolgs
+## 7. Definition of success
 
-MelonMe ist technisch brauchbar, wenn FruitStack die drei Operationen zuverlässig aufrufen kann; Sprache und Markt korrekt getrennt werden; vorhandene Teilzugänge tatsächlich genutzt werden; ein lokaler Fehlschlag nicht die übrigen Chancen abbricht; kommerzielle Antworten nur in erlaubten Kontexten veröffentlicht werden; und Ausgaben, Ergebnisse und Unsicherheit nachvollziehbar sind.
+MelonMe is technically useful when FruitStack can reliably call all three operations; language and market are correctly separated; existing partial integrations are genuinely used; local failures do not block unrelated opportunities; commercial replies are published only in permitted contexts; and outputs, results, and uncertainties are traceable.
 
-MelonMe ist **wirtschaftlich erfolgreich**, wenn aus erlaubten realen Empfehlungen bestätigte Provisionen und schließlich Auszahlungen entstehen, die den zurechenbaren Aufwand übersteigen. Jede neue Entscheidung soll mit geringstmöglichen Kosten näher an dieses Ergebnis führen.
+MelonMe is **commercially successful** when permitted, real recommendations generate confirmed commissions and ultimately payouts exceeding their attributable costs. Each new decision should move toward this outcome at the lowest feasible cost.
 
-**Kernsatz:** *Schnell handeln, wo wir dürfen und tatsächlich können. Lokal ausweichen, wo etwas nicht funktioniert. Lernen, wo reales Geld verdient wird.*
+**Core principle:** *Act quickly where we are permitted and genuinely able to. Fall back locally where something fails. Learn from actual money earned.*
 
 ---
 
-**Abgrenzung des Stands:** v0.3.1 ist das Zielbild. Ergänzt wurde ein erster ausführbarer MCP-Kern, noch ohne Live-Partnernachweis, Host-Integration oder Zusage realer Einnahmen. Frühere Konzepte bleiben über Git-Historie nachvollziehbar.
+**Status clarification:** v0.3.1 describes the target concept. An initial executable MCP core has been added, but no live partner operation, host integration, or real revenue has been verified. Earlier concepts remain available in Git history.
+
+## License
+
+**No license has been granted for this repository at this time.** Public visibility on GitHub does not make MelonMe open-source software or grant general permission to use, modify, or redistribute its code. No `LICENSE` file is included.
